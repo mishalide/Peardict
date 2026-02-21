@@ -1,5 +1,3 @@
-
-
 Project Peardict is a fully cloud hosted (free!) FRC "prediction system". 
 
 Do you want to play games while scouting? Do you take an issue with these pesky prediction markets which are just poorly disguised gambling? Well fear no more for Project Peardict is here!
@@ -64,3 +62,8 @@ This repository currently contains:
 Project Peardict does not involve real gambling or bets. While it reuses backend APIs from a discontinued mock-gambling app (Project FUJO), this platform is purely a quiz/game system:
  - Users pick which alliance/team will win, and points are awarded only for correct guesses.
  - There is no fake currency or anything involved
+
+## Some UI Samples
+<img width="1919" height="1199" alt="image" src="https://github.com/user-attachments/assets/617cd48a-9d4c-4fe5-b384-35233090f473" />
+*some elements subject to change*
+
