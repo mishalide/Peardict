@@ -1,6 +1,4 @@
-Project Peardict is a fully cloud hosted (free!) FRC "prediction system". 
-
-Do you want to play games while scouting? Do you take an issue with these pesky prediction markets which are just poorly disguised gambling? Well fear no more for Project Peardict is here!
+Do you want to play games while scouting? Do like Kahoot? 
 
 **Project Peardict** is a Kahoot-style FRC scouting platform:
 - Before each match, users pick which alliance/team they think will win.
