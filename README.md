@@ -1,3 +1,7 @@
+<p align="right">
+  <a href="README.ru.md">Русская версия</a>
+</p>
+
 Do you want to play games while scouting? Do like Kahoot? 
 
 **Project Peardict** is a Kahoot-style FRC scouting platform:
