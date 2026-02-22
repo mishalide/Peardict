@@ -1,0 +1,554 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>PROJECT PEARDICT // QUIZ DASHBOARD</title>
+  <link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Orbitron:wght@400;700;900&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --bg:#060810;--surface:#0b0f1a;--border:#1a2a4a;--border2:#253a5e;
+      --accent:#00d4ff;--accent2:#ff6b35;
+      --blue:#4fa3ff;--red:#ff4466;
+      --green:#00ff88;--yellow:#ffd700;
+      --text:#c8d8f0;--muted:#3a5070;--muted2:#4a6080;
+    }
+    *{box-sizing:border-box;margin:0;padding:0;}
+    html,body{height:100%;}
+    body{background:var(--bg);color:var(--text);font-family:'Share Tech Mono',monospace;display:flex;flex-direction:column;min-height:100vh;}
+
+    .topbar{display:flex;align-items:center;padding:0 24px;height:52px;background:var(--surface);border-bottom:1px solid var(--border);position:sticky;top:0;z-index:200;box-shadow:0 2px 20px rgba(0,212,255,0.06);}
+    .topbar__logo{font-family:'Orbitron',sans-serif;font-size:15px;font-weight:900;letter-spacing:2px;color:#fff;}
+    .topbar__logo span{color:var(--accent2);}
+    .topbar__tag{font-size:8px;color:var(--muted);letter-spacing:2px;margin-left:14px;}
+    .topbar__right{margin-left:auto;display:flex;align-items:center;gap:16px;}
+    .hud-pill{display:flex;align-items:center;gap:8px;padding:5px 12px;background:rgba(0,212,255,0.06);border:1px solid var(--border);font-size:10px;}
+    .hud-pill__label{color:var(--muted);letter-spacing:1px;}
+    .hud-pill__value{color:var(--accent);font-family:'Orbitron',sans-serif;font-size:11px;font-weight:700;}
+    .hud-pill__value.green{color:var(--green);}
+    .dot{width:6px;height:6px;border-radius:50%;}
+    .dot-live{background:var(--green);box-shadow:0 0 6px var(--green);animation:blink 1.4s infinite;}
+    @keyframes blink{0%,100%{opacity:1;}50%{opacity:0.2;}}
+    .btn-logout{padding:5px 14px;background:transparent;border:1px solid var(--muted);color:var(--muted);font-family:'Share Tech Mono',monospace;font-size:9px;letter-spacing:2px;cursor:pointer;transition:all 0.2s;}
+    .btn-logout:hover{border-color:var(--red);color:var(--red);}
+    .btn-leaderboard{padding:5px 14px;background:transparent;border:1px solid var(--accent);color:var(--accent);font-family:'Share Tech Mono',monospace;font-size:9px;letter-spacing:2px;cursor:pointer;transition:all 0.2s;}
+    .btn-leaderboard:hover{background:rgba(0,212,255,0.1);}
+
+    .app{display:flex;flex:1;height:calc(100vh - 76px);overflow:hidden;}
+    .sidebar{width:290px;min-width:290px;background:var(--surface);border-right:1px solid var(--border);display:flex;flex-direction:column;overflow:hidden;}
+    .content{flex:1;display:flex;overflow:hidden;}
+    .main{flex:1;overflow-y:auto;padding:20px;display:flex;flex-direction:column;gap:16px;}
+    .lb-col{width:380px;min-width:380px;border-left:1px solid var(--border);display:flex;flex-direction:column;overflow:hidden;}
+
+    .sidebar__head{padding:12px 16px 10px;border-bottom:1px solid var(--border);}
+    .sidebar__title{font-size:9px;letter-spacing:3px;color:var(--accent);text-transform:uppercase;}
+    .sidebar__meta{font-size:8px;color:var(--muted);margin-top:3px;}
+    .sidebar__list{overflow-y:auto;flex:1;}
+    .match-item{padding:11px 16px;border-bottom:1px solid var(--border);cursor:pointer;transition:background 0.15s;position:relative;}
+    .match-item:hover{background:rgba(0,212,255,0.04);}
+    .match-item.selected{background:rgba(0,212,255,0.08);border-left:2px solid var(--accent);}
+    .match-item__id{font-size:8px;color:var(--accent);letter-spacing:1px;}
+    .match-item__teams{font-size:11px;color:var(--text);margin:3px 0;}
+    .match-item__teams .bl{color:var(--blue);}
+    .match-item__teams .rd{color:var(--red);}
+    .match-item__foot{display:flex;align-items:center;justify-content:space-between;}
+    .badge{display:inline-block;padding:1px 7px;font-size:7px;letter-spacing:1px;text-transform:uppercase;}
+    .badge-open{background:rgba(0,255,136,0.1);border:1px solid rgba(0,255,136,0.3);color:var(--green);}
+    .badge-closed{background:rgba(255,34,68,0.1);border:1px solid rgba(255,34,68,0.2);color:var(--red);}
+
+    .bet-panel{background:var(--surface);border:1px solid var(--border);padding:22px;position:relative;overflow:hidden;}
+    .bet-panel::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,transparent,var(--accent),transparent);}
+    .bet-panel__title{font-family:'Orbitron',sans-serif;font-size:14px;font-weight:700;letter-spacing:2px;color:#fff;margin-bottom:3px;}
+    .bet-panel__sub{font-size:9px;color:var(--muted);letter-spacing:1px;margin-bottom:18px;}
+    .alliance-row{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:18px;}
+    .alliance-card{padding:14px;border:1px solid var(--border);cursor:pointer;transition:all 0.2s;position:relative;text-align:center;}
+    .alliance-card.blue-card:hover,.alliance-card.blue-card.selected{border-color:var(--blue);background:rgba(79,163,255,0.08);}
+    .alliance-card.red-card:hover,.alliance-card.red-card.selected{border-color:var(--red);background:rgba(255,68,102,0.08);}
+    .alliance-card__label{font-size:8px;letter-spacing:3px;text-transform:uppercase;margin-bottom:6px;}
+    .blue-card .alliance-card__label{color:var(--blue);}
+    .red-card .alliance-card__label{color:var(--red);}
+    .alliance-card__teams{font-size:11px;color:var(--text);line-height:1.6;}
+    .alliance-card__odds{font-family:'Orbitron',sans-serif;font-size:17px;font-weight:700;margin-top:8px;}
+    .blue-card .alliance-card__odds{color:var(--blue);}
+    .red-card .alliance-card__odds{color:var(--red);}
+    .alliance-card__pool{font-size:8px;color:var(--muted);margin-top:3px;}
+    .sel-check{position:absolute;top:7px;right:8px;font-size:10px;}
+    .blue-card.selected .sel-check{color:var(--blue);}
+    .red-card.selected .sel-check{color:var(--red);}
+
+    .quiz-preview{display:flex;gap:0;margin-bottom:16px;border:1px solid rgba(0,255,136,0.1);background:rgba(0,255,136,0.04);}
+    .preview-item{flex:1;text-align:center;padding:12px 8px;}
+    .preview-item__label{font-size:7px;color:var(--muted);letter-spacing:2px;margin-bottom:4px;}
+    .preview-item__value{font-family:'Orbitron',sans-serif;font-size:15px;font-weight:700;color:var(--green);}
+    .preview-item__value.dim{color:var(--muted);font-size:12px;}
+    .payout-sep{width:1px;background:var(--border);align-self:stretch;}
+
+    .btn-bet{width:100%;padding:14px;background:transparent;border:1px solid var(--accent);color:var(--accent);font-family:'Orbitron',sans-serif;font-size:11px;font-weight:700;letter-spacing:4px;cursor:pointer;position:relative;overflow:hidden;transition:color 0.3s;}
+    .btn-bet::before{content:'';position:absolute;inset:0;background:var(--accent);transform:translateX(-101%);transition:transform 0.3s cubic-bezier(0.16,1,0.3,1);}
+    .btn-bet:hover:not(:disabled)::before{transform:translateX(0);}
+    .btn-bet:hover:not(:disabled){color:var(--bg);}
+    .btn-bet:disabled{opacity:0.4;cursor:not-allowed;}
+    .btn-bet span{position:relative;z-index:1;}
+    .btn-bet.loading span::after{content:'';display:inline-block;width:8px;height:8px;border:1px solid currentColor;border-top-color:transparent;border-radius:50%;margin-left:10px;animation:spin 0.6s linear infinite;vertical-align:middle;}
+    @keyframes spin{to{transform:rotate(360deg);}}
+    .bet-msg{padding:10px 14px;font-size:10px;letter-spacing:1px;margin-top:10px;display:none;}
+    .bet-msg.show{display:block;}
+    .bet-msg.error{background:rgba(255,34,68,0.08);border:1px solid rgba(255,34,68,0.3);color:var(--red);}
+    .bet-msg.success{background:rgba(0,255,136,0.08);border:1px solid rgba(0,255,136,0.3);color:var(--green);}
+
+    .panel{background:var(--surface);border:1px solid var(--border);}
+    .panel__head{padding:12px 18px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;}
+    .panel__head-title{font-size:9px;letter-spacing:3px;color:var(--accent);text-transform:uppercase;}
+    .panel__body{padding:14px 18px;}
+    .bets-table{width:100%;border-collapse:collapse;font-size:10px;}
+    .bets-table th{font-size:7px;letter-spacing:2px;color:var(--muted);text-align:left;padding:5px 8px;border-bottom:1px solid var(--border);}
+    .bets-table td{padding:9px 8px;border-bottom:1px solid rgba(26,42,74,0.4);vertical-align:middle;}
+    .bets-table tr:last-child td{border-bottom:none;}
+    .bets-table tr:hover td{background:rgba(0,212,255,0.025);}
+    .s-blue{color:var(--blue);font-weight:bold;}
+    .s-red{color:var(--red);font-weight:bold;}
+    .odds-val{font-family:'Orbitron',sans-serif;font-size:11px;color:var(--yellow);}
+    .empty-state{text-align:center;padding:36px 20px;color:var(--muted);font-size:9px;letter-spacing:2px;}
+
+    .no-match{display:flex;flex-direction:column;align-items:center;justify-content:center;padding:50px 30px;text-align:center;background:var(--surface);border:1px solid var(--border);gap:10px;}
+    .no-match__icon{font-size:28px;opacity:0.25;}
+    .no-match__text{font-size:9px;color:var(--muted);letter-spacing:2px;line-height:1.9;}
+
+    .loading-screen{display:flex;flex-direction:column;align-items:center;justify-content:center;flex:1;gap:14px;}
+    .loading-spinner{width:36px;height:36px;border:2px solid var(--border);border-top-color:var(--accent);border-radius:50%;animation:spin 0.8s linear infinite;}
+    .loading-text{font-size:9px;color:var(--muted);letter-spacing:3px;}
+
+    .closed-notice{text-align:center;padding:18px;color:var(--muted);font-size:10px;letter-spacing:2px;border:1px solid var(--border);}
+
+    .ticker{height:24px;background:rgba(0,212,255,0.05);border-top:1px solid var(--border);overflow:hidden;display:flex;align-items:center;flex-shrink:0;}
+    .ticker__track{display:flex;white-space:nowrap;animation:tickerScroll 35s linear infinite;font-size:9px;color:var(--muted);letter-spacing:2px;gap:60px;}
+    @keyframes tickerScroll{from{transform:translateX(100vw);}to{transform:translateX(-100%);}}
+    .t-a{color:var(--accent);}.t-b{color:var(--blue);}.t-r{color:var(--red);}.t-g{color:var(--green);}
+
+    .panels-row{display:flex;gap:16px;align-items:stretch;}
+    .panels-row .panel{flex:1;min-width:0;}
+
+    /* NEXUS PANEL */
+    .nexus-panel{flex:1;min-width:0;background:var(--surface);border:1px solid var(--border);display:flex;flex-direction:column;position:relative;overflow:hidden;}
+    .nexus-panel::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,transparent,var(--yellow),transparent);}
+    .nexus-panel__head{padding:12px 18px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;flex-shrink:0;}
+    .nexus-panel__title{font-size:9px;letter-spacing:3px;color:var(--yellow);text-transform:uppercase;}
+    .nexus-panel__meta{font-size:8px;color:var(--muted);display:flex;align-items:center;gap:8px;}
+    .nexus-panel__body{flex:1;overflow-y:auto;padding:0;}
+
+    .nexus-queuing{padding:14px 18px;border-bottom:1px solid var(--border);background:rgba(255,107,53,0.04);}
+    .nexus-queuing__label{font-size:7px;letter-spacing:2px;color:var(--muted);margin-bottom:4px;}
+    .nexus-queuing__match{font-family:'Orbitron',sans-serif;font-size:16px;font-weight:700;color:var(--accent2);}
+    .nexus-queuing__null{font-size:10px;color:var(--muted);letter-spacing:1px;}
+
+    .nexus-announcements{padding:10px 18px;border-bottom:1px solid var(--border);}
+    .nexus-ann-item{padding:6px 0;border-bottom:1px solid rgba(26,42,74,0.4);font-size:9px;color:var(--yellow);line-height:1.5;}
+    .nexus-ann-item:last-child{border-bottom:none;}
+    .nexus-ann-label{font-size:7px;color:var(--muted);letter-spacing:2px;margin-bottom:4px;}
+
+    .nexus-parts{padding:10px 18px;border-bottom:1px solid var(--border);}
+    .nexus-parts-item{padding:5px 0;border-bottom:1px solid rgba(26,42,74,0.4);font-size:9px;color:var(--red);line-height:1.5;}
+    .nexus-parts-item:last-child{border-bottom:none;}
+
+    .nexus-matches{padding:0;}
+    .nexus-match-row{display:grid;grid-template-columns:90px 1fr auto;align-items:center;gap:8px;padding:8px 18px;border-bottom:1px solid rgba(26,42,74,0.35);transition:background 0.1s;}
+    .nexus-match-row:hover{background:rgba(0,212,255,0.025);}
+    .nexus-match-row.is-queuing{background:rgba(255,107,53,0.06);border-left:2px solid var(--accent2);}
+    .nexus-match-row.is-deck{background:rgba(255,214,0,0.04);border-left:2px solid var(--yellow);}
+    .nexus-match-row.is-field{background:rgba(0,255,136,0.04);border-left:2px solid var(--green);}
+    .nexus-match-label{font-size:9px;color:var(--text);}
+    .nexus-match-teams{font-size:8px;color:var(--muted);}
+    .nexus-match-teams .nb{color:var(--blue);}
+    .nexus-match-teams .nr{color:var(--red);}
+    .nexus-status-badge{font-size:7px;letter-spacing:1px;padding:2px 6px;white-space:nowrap;}
+    .nexus-status-badge.sq{background:rgba(255,107,53,0.15);border:1px solid rgba(255,107,53,0.4);color:var(--accent2);}
+    .nexus-status-badge.sd{background:rgba(255,214,0,0.1);border:1px solid rgba(255,214,0,0.3);color:var(--yellow);}
+    .nexus-status-badge.sf{background:rgba(0,255,136,0.1);border:1px solid rgba(0,255,136,0.3);color:var(--green);}
+    .nexus-status-badge.ss{background:rgba(0,212,255,0.1);border:1px solid rgba(0,212,255,0.3);color:var(--accent);}
+    .nexus-status-badge.sc{background:transparent;border:1px solid var(--border);color:var(--muted);}
+    .nexus-time{font-size:7px;color:var(--muted);margin-top:2px;}
+    .nexus-err{padding:20px 18px;font-size:9px;color:var(--red);letter-spacing:1px;}
+
+    ::-webkit-scrollbar{width:4px;}::-webkit-scrollbar-track{background:transparent;}::-webkit-scrollbar-thumb{background:var(--border2);}
+  </style>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="topbar__logo">PROJECT <span>PEARDICT</span></div>
+  <div class="topbar__tag">FRC MATCH QUIZ MODE</div>
+  <div class="topbar__right">
+    <div class="hud-pill">
+      <div class="dot dot-live"></div>
+      <span class="hud-pill__label">SCOUT</span>
+      <span class="hud-pill__value" id="hudUser">—</span>
+    </div>
+    <div class="hud-pill">
+      <span class="hud-pill__label">POINTS</span>
+      <span class="hud-pill__value green" id="hudBal">—</span>
+    </div>
+    <button class="btn-logout" onclick="logout()">LOGOUT</button>
+  </div>
+</div>
+
+<div class="app" id="app">
+  <div class="loading-screen" id="loadingScreen">
+    <div class="loading-spinner"></div>
+    <div class="loading-text">CONNECTING TO PEARDICT BACKEND...</div>
+  </div>
+</div>
+
+<div class="ticker"><div class="ticker__track" id="tickerTrack"><span>LOADING...</span></div></div>
+
+<script>
+const API = "https://fujo-worker.misha-a-golubev.workers.dev";
+const QUIZ_POINTS = 0;
+
+// ── LEADERBOARD CONFIG ───────────────────────────────────────
+const LB_POLL_MS = 30000;
+let lbPollTimer = null;
+
+const userId = sessionStorage.getItem('fujo_user_id');
+let balance = parseFloat(sessionStorage.getItem('fujo_balance') || '0');
+if (!userId) { window.location.href = 'login.html'; }
+document.getElementById('hudUser').textContent = userId;
+document.getElementById('hudBal').textContent = balance.toLocaleString() + ' CR';
+function logout() { sessionStorage.clear(); window.location.href = 'login.html'; }
+
+let matches = [], myPicks = [], selMatch = null, selSide = null;
+
+async function init() {
+  try {
+    const [mr, br] = await Promise.all([
+      fetch(`${API}/api/matches`),
+      fetch(`${API}/api/users/${encodeURIComponent(userId)}/bets`)
+    ]);
+    matches = ((await mr.json()).matches || []).map(m => ({
+      ...m,
+      // Belt-and-suspenders: re-derive has_score on the client in case backend sends stale/wrong value
+      has_score: m.has_score && m.blue_score !== null && m.blue_score !== "" && m.red_score !== null && m.red_score !== ""
+    }));
+    myPicks = (await br.json()).bets || [];
+    buildShell();
+    selectNextOpenMatch();
+    renderSidebar();
+    renderMain();
+    buildTicker();
+    startLeaderboardPoll();
+  } catch(e) {
+    document.getElementById('app').innerHTML = `<div class="loading-screen">
+      <div style="font-size:10px;color:var(--red);letter-spacing:2px">⚠ BACKEND UNREACHABLE: ${e.message}</div>
+      <button onclick="init()" style="margin-top:12px;padding:8px 20px;background:transparent;border:1px solid var(--accent);color:var(--accent);font-family:'Share Tech Mono',monospace;font-size:9px;cursor:pointer;">RETRY</button>
+    </div>`;
+  }
+}
+
+function buildShell() {
+  document.getElementById('app').innerHTML = `
+    <div class="sidebar">
+      <div class="sidebar__head">
+        <div class="sidebar__title">NEXT MATCH QUIZ</div>
+        <div class="sidebar__meta" id="sideMeta"></div>
+      </div>
+      <div class="sidebar__list" id="matchList"></div>
+    </div>
+    <div class="content">
+      <div class="main" id="mainArea"></div>
+      <div class="lb-col">
+        <div class="nexus-panel" id="nexusPanel" style="flex:1;">
+          <div class="nexus-panel__head">
+            <div class="nexus-panel__title">🏆 LEADERBOARD</div>
+            <div style="display:flex;align-items:center;gap:12px;">
+              <button id="lbToggle" onclick="toggleLbMode()" style="padding:3px 10px;background:transparent;border:1px solid var(--border2);color:var(--muted);font-family:'Share Tech Mono',monospace;font-size:7px;letter-spacing:1px;cursor:pointer;transition:all 0.2s;" onmouseover="this.style.borderColor='var(--accent)';this.style.color='var(--accent)'" onmouseout="this.style.borderColor='var(--border2)';this.style.color='var(--muted)'">SHOW ACCURACY</button>
+              <div class="nexus-panel__meta" id="lbMeta">LOADING...</div>
+            </div>
+          </div>
+          <div class="nexus-panel__body" id="nexusBody"><div class="nexus-err">LOADING LEADERBOARD...</div></div>
+        </div>
+      </div>
+    </div>`;
+}
+
+function selectNextOpenMatch() {
+  const open = matches.filter(m => !m.has_score);
+  if (open.length) {
+    selMatch = open[0];
+  }
+}
+
+function renderSidebar() {
+  const open = matches.filter(m => !m.has_score);
+  const meta = document.getElementById('sideMeta');
+  if (meta) meta.textContent = `${open.length} OPEN MATCHES`;
+
+  const list = document.getElementById('matchList');
+  if (!list) return;
+  if (!open.length) { list.innerHTML = '<div class="empty-state">NO OPEN MATCHES</div>'; return; }
+
+  list.innerHTML = open.map(m => {
+    const sel = selMatch?.match_id === m.match_id ? 'selected' : '';
+    return `<div class="match-item ${sel}" onclick="selectMatch('${m.match_id}')">
+      <div class="match-item__id">${m.match_id}</div>
+      <div class="match-item__teams">
+        <span class="bl">${m.blue_team}</span> <span style="color:var(--muted)">vs</span> <span class="rd">${m.red_team}</span>
+      </div>
+      <div class="match-item__foot">
+        <span class="badge badge-open">OPEN</span>
+        <span class="match-item__score">QUIZ PICK</span>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function renderMain() {
+  const main = document.getElementById('mainArea');
+  if (!main) return;
+  if (!selMatch) {
+    main.innerHTML = `
+      <div class="no-match">
+        <div class="no-match__icon">⚡</div>
+        <div class="no-match__text">NO UPCOMING OPEN MATCHES<br>CHECK BACK AFTER NEW DATA SYNC</div>
+      </div>
+      ${myPicksHTML('YOUR PICK HISTORY', myPicks)}`;
+    return;
+  }
+
+  const m = selMatch;
+  const mp = myPicks.filter(b => b.match_id === m.match_id);
+  const existingPick = mp.length > 0 ? mp[mp.length - 1] : null;
+
+  // If already picked, show locked state
+  if (existingPick) {
+    const lockedSide = existingPick.side;
+    main.innerHTML = `
+    <div class="bet-panel">
+      <div class="bet-panel__title">${m.match_id}</div>
+      <div class="bet-panel__sub">PICK LOCKED IN — ${lockedSide.toUpperCase()} ALLIANCE</div>
+
+      <div class="alliance-row">
+        <div class="alliance-card blue-card ${lockedSide==='blue'?'selected':''}" style="cursor:not-allowed;opacity:${lockedSide==='blue'?'1':'0.4'}">
+          <div class="sel-check">${lockedSide==='blue'?'✓':''}</div>
+          <div class="alliance-card__label">🔵 BLUE ALLIANCE</div>
+          <div class="alliance-card__teams">${m.blue_team}</div>
+          <div class="alliance-card__odds">PICK</div>
+          <div class="alliance-card__pool">QUIZ SELECTION</div>
+        </div>
+        <div class="alliance-card red-card ${lockedSide==='red'?'selected':''}" style="cursor:not-allowed;opacity:${lockedSide==='red'?'1':'0.4'}">
+          <div class="sel-check">${lockedSide==='red'?'✓':''}</div>
+          <div class="alliance-card__label">🔴 RED ALLIANCE</div>
+          <div class="alliance-card__teams">${m.red_team}</div>
+          <div class="alliance-card__odds">PICK</div>
+          <div class="alliance-card__pool">QUIZ SELECTION</div>
+        </div>
+      </div>
+
+      <div class="bet-msg success show">✓ PICK ALREADY SUBMITTED — ${lockedSide.toUpperCase()} ALLIANCE LOCKED FOR ${m.match_id}</div>
+    </div>
+    ${myPicksHTML(m.match_id + ' — YOUR PICKS', mp)}`;
+    return;
+  }
+
+  main.innerHTML = `
+    <div class="bet-panel">
+      <div class="bet-panel__title">${m.match_id}</div>
+      <div class="bet-panel__sub">${m.market_status || 'MATCH OPEN'} • PICK THE WINNER FOR +100 IF CORRECT</div>
+
+      <div class="alliance-row">
+        <div class="alliance-card blue-card ${selSide==='blue'?'selected':''}" onclick="selectSide('blue')">
+          <div class="sel-check">${selSide==='blue'?'✓':''}</div>
+          <div class="alliance-card__label">🔵 BLUE ALLIANCE</div>
+          <div class="alliance-card__teams">${m.blue_team}</div>
+          <div class="alliance-card__odds">PICK</div>
+          <div class="alliance-card__pool">QUIZ SELECTION</div>
+        </div>
+        <div class="alliance-card red-card ${selSide==='red'?'selected':''}" onclick="selectSide('red')">
+          <div class="sel-check">${selSide==='red'?'✓':''}</div>
+          <div class="alliance-card__label">🔴 RED ALLIANCE</div>
+          <div class="alliance-card__teams">${m.red_team}</div>
+          <div class="alliance-card__odds">PICK</div>
+          <div class="alliance-card__pool">QUIZ SELECTION</div>
+        </div>
+      </div>
+
+      <div class="quiz-preview">
+        <div class="preview-item">
+          <div class="preview-item__label">MATCH</div>
+          <div class="preview-item__value dim">${m.match_id}</div>
+        </div>
+        <div class="payout-sep"></div>
+        <div class="preview-item">
+          <div class="preview-item__label">QUIZ POINTS</div>
+          <div class="preview-item__value">${QUIZ_POINTS}</div>
+        </div>
+        <div class="payout-sep"></div>
+        <div class="preview-item">
+          <div class="preview-item__label">SELECTED SIDE</div>
+          <div class="preview-item__value dim">${selSide ? selSide.toUpperCase() : '—'}</div>
+        </div>
+      </div>
+
+      <button class="btn-bet" id="betBtn" onclick="submitPick()" ${selSide?'':'disabled'}>
+        <span id="betBtnText">${selSide ? `LOCK ${selSide.toUpperCase()} PICK` : 'SELECT A SIDE'}</span>
+      </button>
+      <div class="bet-msg" id="betMsg"></div>
+    </div>
+    ${myPicksHTML(m.match_id + ' — YOUR PICKS', mp)}`;
+}
+
+function selectMatch(id) {
+  selMatch = matches.find(m => m.match_id === id) || null;
+  selSide = null;
+  renderSidebar();
+  renderMain();
+}
+
+function selectSide(side) {
+  selSide = side;
+  renderMain();
+}
+
+async function submitPick() {
+  const msg = document.getElementById('betMsg');
+  const btn = document.getElementById('betBtn');
+  const txt = document.getElementById('betBtnText');
+  if (!selMatch || !selSide) return;
+
+  btn.classList.add('loading'); btn.disabled = true; txt.textContent = 'SUBMITTING';
+  msg.className='bet-msg';
+
+  try {
+    const res = await fetch(`${API}/api/bets`, {
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({ user_id:userId, match_id:selMatch.match_id, side:selSide, stake: QUIZ_POINTS })
+    });
+    const data = await res.json();
+    if (data.error) throw new Error(data.error);
+
+    balance = data.balance;
+    sessionStorage.setItem('fujo_balance', String(balance));
+    document.getElementById('hudBal').textContent = balance.toLocaleString() + ' CR';
+
+    myPicks.push(data.bet);
+    msg.textContent = `✓ PICK LOCKED — ${selSide.toUpperCase()} FOR ${selMatch.match_id} // 100 POINT QUIZ ENTRY`;
+    msg.className='bet-msg success show';
+    btn.classList.remove('loading');
+    txt.textContent='PICK SUBMITTED ✓';
+    btn.style.borderColor='var(--green)'; btn.style.color='var(--green)';
+
+    setTimeout(() => { selSide=null; renderSidebar(); renderMain(); buildTicker(); }, 1400);
+
+  } catch(e) {
+    msg.textContent=`⚠ ${e.message.toUpperCase()}`;
+    msg.className='bet-msg error show';
+    btn.classList.remove('loading'); btn.disabled=false; txt.textContent='RETRY PICK';
+  }
+}
+
+function myPicksHTML(title, bets) {
+  const rows = [...bets].reverse().slice(0,20);
+  return `<div class="panel">
+    <div class="panel__head">
+      <div class="panel__head-title">${title}</div>
+      <div style="font-size:8px;color:var(--muted)">${rows.length} RECORDS</div>
+    </div>
+    <div class="panel__body">
+      ${rows.length===0 ? '<div class="empty-state">NO PICKS YET — MAKE YOUR FIRST QUIZ PICK</div>' : `
+      <table class="bets-table">
+        <thead><tr><th>MATCH</th><th>SIDE</th><th>TIME</th></tr></thead>
+        <tbody>${rows.map(b=>`<tr>
+          <td>${b.match_id}</td>
+          <td class="${b.side==='blue'?'s-blue':'s-red'}">${b.side.toUpperCase()}</td>
+          <td style="color:var(--muted);font-size:8px">${b.created_at?new Date(b.created_at).toLocaleTimeString():'—'}</td>
+        </tr>`).join('')}</tbody>
+      </table>`}
+    </div>
+  </div>`;
+}
+
+// ── LEADERBOARD ───────────────────────────────────────────────
+let lbMode = 'points'; // 'points' | 'accuracy'
+let lbData = [];
+
+async function fetchLeaderboard() {
+  const body = document.getElementById('nexusBody');
+  const meta = document.getElementById('lbMeta');
+  try {
+    const res = await fetch(`${API}/api/leaderboard`);
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    const data = await res.json();
+    lbData = data.leaderboard || [];
+    renderLeaderboard();
+    if (meta) meta.textContent = `${lbData.length} SCOUTS`;
+  } catch(e) {
+    if (body) body.innerHTML = `<div style="padding:20px 18px;font-size:9px;color:var(--red);letter-spacing:1px;">⚠ LEADERBOARD UNAVAILABLE<br><span style="color:var(--muted);font-size:8px;">${e.message.toUpperCase()}</span></div>`;
+    if (meta) meta.textContent = 'ERROR';
+  }
+}
+
+function toggleLbMode() {
+  lbMode = lbMode === 'points' ? 'accuracy' : 'points';
+  const btn = document.getElementById('lbToggle');
+  if (btn) btn.textContent = lbMode === 'points' ? 'SHOW ACCURACY' : 'SHOW POINTS';
+  renderLeaderboard();
+}
+
+function renderLeaderboard() {
+  const body = document.getElementById('nexusBody');
+  if (!body || !lbData.length) return;
+
+  const byPoints   = [...lbData].sort((a,b) => b.balance - a.balance);
+  const byAccuracy = [...lbData].sort((a,b) => b.accuracy - a.accuracy);
+  const sorted = lbMode === 'points' ? byPoints : byAccuracy;
+
+  const myRank = sorted.findIndex(u => u.user_id === userId) + 1;
+  const medals = ['🥇','🥈','🥉'];
+
+  const rows = sorted.map((u, i) => {
+    const isMe = u.user_id === userId;
+    const medal = medals[i] || String(i+1);
+    const mainVal = lbMode === 'points'
+      ? `<span style="font-family:'Orbitron',sans-serif;font-size:11px;font-weight:700;color:var(--green);">${u.balance.toLocaleString()}</span>`
+      : `<span style="font-family:'Orbitron',sans-serif;font-size:11px;font-weight:700;color:var(--yellow);">${u.total_picks > 0 ? Math.round(u.accuracy*100)+'%' : '0%'}</span>`;
+    const subVal = lbMode === 'points'
+      ? `<span style="font-size:8px;color:var(--muted);">${u.total_picks > 0 ? Math.round(u.accuracy*100)+'%' : '0%'}</span>`
+      : `<span style="font-size:8px;color:var(--muted);">${u.balance.toLocaleString()} PTS</span>`;
+
+    return `<div style="display:grid;grid-template-columns:32px 1fr auto auto;align-items:center;gap:8px;padding:8px 18px;border-bottom:1px solid rgba(26,42,74,0.35);${isMe?'background:rgba(0,212,255,0.06);border-left:2px solid var(--accent);':''}">
+      <div style="font-size:${i<3?'13px':'9px'};text-align:center;color:var(--muted);">${medal}</div>
+      <div style="font-size:10px;color:${isMe?'var(--accent)':'var(--text)'};">${u.user_id}${isMe?' ◄':''}</div>
+      ${subVal}
+      ${mainVal}
+    </div>`;
+  }).join('');
+
+  body.innerHTML = `
+    <div style="display:grid;grid-template-columns:32px 1fr auto auto;gap:8px;padding:8px 18px;border-bottom:1px solid var(--border);font-size:7px;color:var(--muted);letter-spacing:2px;">
+      <div></div>
+      <div>SCOUT</div>
+      <div>${lbMode==='points'?'ACC':'PTS'}</div>
+      <div>${lbMode==='points'?'PTS':'ACC'}</div>
+    </div>
+    ${rows}
+    ${myRank > 0 ? `<div style="padding:8px 18px;font-size:8px;color:var(--muted);text-align:center;border-top:1px solid var(--border);">YOUR RANK: <span style="color:var(--accent);font-family:'Orbitron',sans-serif;">#${myRank}</span> OF ${sorted.length}</div>` : ''}`;
+}
+
+function startLeaderboardPoll() {
+  fetchLeaderboard();
+  lbPollTimer = setInterval(fetchLeaderboard, LB_POLL_MS);
+}
+
+function buildTicker() {
+  const open = matches.filter(m=>!m.has_score);
+  const closed = matches.filter(m=>m.has_score);
+  const parts = [];
+  open.slice(0,5).forEach(m=>parts.push(`${m.match_id} // <span class="t-b">${m.blue_team}</span> vs <span class="t-r">${m.red_team}</span> // <span class="t-g">OPEN QUIZ</span>`));
+  closed.slice(0,4).forEach(m=>parts.push(`${m.match_id} FINAL: <span class="t-b">${m.blue_score}</span>–<span class="t-r">${m.red_score}</span> <span class="t-a">${m.winner?.toUpperCase()||'?'} WIN</span>`));
+  parts.push(`YOUR PICKS: <span class="t-g">${myPicks.length}</span> // BALANCE: <span class="t-g">${balance.toLocaleString()} CR</span>`);
+  parts.push(`DATA POWERED BY <a href="https://www.thebluealliance.com" target="_blank" style="color:var(--accent2);text-decoration:none;letter-spacing:2px;">THE BLUE ALLIANCE</a>`);
+  document.getElementById('tickerTrack').innerHTML = parts.map(p=>`<span>${p}</span>`).join('<span style="opacity:0.3;margin:0 30px">◆</span>');
+}
+
+init();
+</script>
+</body>
+</html>

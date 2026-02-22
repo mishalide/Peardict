@@ -1,0 +1,272 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>PROJECT PEARDICT // LOGIN</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Orbitron:wght@400;700;900&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --bg: #060810; --panel: #0b0f1a; --border: #1a2a4a;
+      --accent: #00d4ff; --accent2: #ff6b35; --green: #00ff88;
+      --red: #ff2244; --text: #c8d8f0; --muted: #3a5070;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      background: var(--bg); color: var(--text); font-family: 'Share Tech Mono', monospace;
+      min-height: 100vh; display: flex; align-items: center; justify-content: center;
+      overflow: hidden; position: relative;
+    }
+    body::before {
+      content: ''; position: fixed; inset: 0;
+      background-image: linear-gradient(rgba(0,212,255,0.03) 1px, transparent 1px), linear-gradient(90deg, rgba(0,212,255,0.03) 1px, transparent 1px);
+      background-size: 40px 40px; animation: gridShift 20s linear infinite;
+    }
+    @keyframes gridShift { 0% { transform: translateY(0); } 100% { transform: translateY(40px); } }
+    body::after {
+      content: ''; position: fixed; inset: 0;
+      background: repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(0,0,0,0.08) 2px, rgba(0,0,0,0.08) 4px);
+      pointer-events: none; z-index: 100;
+    }
+    .corner { position: fixed; width: 80px; height: 80px; opacity: 0.4; }
+    .corner--tl { top: 20px; left: 20px; border-top: 2px solid var(--accent); border-left: 2px solid var(--accent); }
+    .corner--tr { top: 20px; right: 20px; border-top: 2px solid var(--accent); border-right: 2px solid var(--accent); }
+    .corner--bl { bottom: 20px; left: 20px; border-bottom: 2px solid var(--accent); border-left: 2px solid var(--accent); }
+    .corner--br { bottom: 20px; right: 20px; border-bottom: 2px solid var(--accent); border-right: 2px solid var(--accent); }
+    .noise { position: fixed; font-size: 10px; color: var(--muted); opacity: 0.15; white-space: nowrap; animation: floatNoise linear infinite; pointer-events: none; }
+    @keyframes floatNoise { from { transform: translateY(100vh); } to { transform: translateY(-100px); } }
+    .panel {
+      position: relative; z-index: 10; width: 420px; background: var(--panel);
+      border: 1px solid var(--border); animation: panelIn 0.8s cubic-bezier(0.16, 1, 0.3, 1) both;
+      box-shadow: 0 0 0 1px rgba(0,212,255,0.1), 0 0 60px rgba(0,212,255,0.08), inset 0 1px 0 rgba(0,212,255,0.1);
+    }
+    @keyframes panelIn { from { opacity: 0; transform: translateY(30px) scale(0.97); } to { opacity: 1; transform: translateY(0) scale(1); } }
+    .panel__header { padding: 20px 28px 18px; border-bottom: 1px solid var(--border); position: relative; overflow: hidden; }
+    .panel__header::after {
+      content: ''; position: absolute; bottom: 0; left: 0; right: 0; height: 1px;
+      background: linear-gradient(90deg, transparent, var(--accent), transparent); animation: scanline 3s ease-in-out infinite;
+    }
+    @keyframes scanline { 0%, 100% { opacity: 0.3; } 50% { opacity: 1; } }
+    .system-tag { font-size: 9px; letter-spacing: 3px; color: var(--accent); text-transform: uppercase; margin-bottom: 8px; display: flex; align-items: center; gap: 8px; }
+    .system-tag::before { content: ''; width: 6px; height: 6px; background: var(--accent); border-radius: 50%; animation: blink 1.4s ease-in-out infinite; box-shadow: 0 0 8px var(--accent); }
+    @keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0.2; } }
+    .panel__title { font-family: 'Orbitron', sans-serif; font-size: 22px; font-weight: 900; letter-spacing: 2px; color: #fff; line-height: 1; }
+    .panel__title span { color: var(--accent2); }
+    .panel__subtitle { font-size: 10px; color: var(--muted); letter-spacing: 2px; margin-top: 6px; }
+    .status-bar { display: flex; align-items: center; gap: 16px; padding: 8px 28px; background: rgba(0,212,255,0.03); border-bottom: 1px solid var(--border); font-size: 9px; color: var(--muted); letter-spacing: 1px; }
+    .status-item { display: flex; align-items: center; gap: 5px; }
+    .status-dot { width: 5px; height: 5px; border-radius: 50%; }
+    .status-dot--green { background: var(--green); box-shadow: 0 0 6px var(--green); animation: blink 2s infinite; }
+    .status-dot--red { background: var(--red); box-shadow: 0 0 6px var(--red); }
+    .status-dot--yellow { background: #ffd700; box-shadow: 0 0 6px #ffd700; animation: blink 1s infinite; }
+    .panel__body { padding: 28px; }
+    .field { margin-bottom: 20px; animation: fieldIn 0.6s cubic-bezier(0.16, 1, 0.3, 1) both; }
+    .field:nth-child(1) { animation-delay: 0.2s; } .field:nth-child(2) { animation-delay: 0.3s; }
+    @keyframes fieldIn { from { opacity: 0; transform: translateX(-16px); } to { opacity: 1; transform: translateX(0); } }
+    .field__label { font-size: 9px; letter-spacing: 2px; color: var(--accent); text-transform: uppercase; margin-bottom: 8px; display: flex; align-items: center; justify-content: space-between; }
+    .field__label-hint { color: var(--muted); font-size: 8px; }
+    .field__input-wrap { position: relative; }
+    .field__input { width: 100%; background: rgba(0,212,255,0.04); border: 1px solid var(--border); color: var(--text); font-family: 'Share Tech Mono', monospace; font-size: 14px; padding: 12px 16px; outline: none; transition: border-color 0.2s, box-shadow 0.2s, background 0.2s; letter-spacing: 1px; }
+    .field__input::placeholder { color: var(--muted); opacity: 0.6; }
+    .field__input:focus { border-color: var(--accent); background: rgba(0,212,255,0.07); box-shadow: 0 0 0 1px rgba(0,212,255,0.2); }
+    .field__input:focus + .field__focus-line { width: 100%; }
+    .field__focus-line { position: absolute; bottom: 0; left: 0; height: 2px; width: 0; background: linear-gradient(90deg, var(--accent), var(--accent2)); transition: width 0.3s ease; }
+    .btn-login { width: 100%; padding: 15px; background: transparent; border: 1px solid var(--accent); color: var(--accent); font-family: 'Orbitron', sans-serif; font-size: 11px; font-weight: 700; letter-spacing: 4px; text-transform: uppercase; cursor: pointer; position: relative; overflow: hidden; transition: color 0.3s; animation: fieldIn 0.6s cubic-bezier(0.16, 1, 0.3, 1) 0.4s both; }
+    .btn-login::before { content: ''; position: absolute; inset: 0; background: var(--accent); transform: translateX(-101%); transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1); }
+    .btn-login:hover::before { transform: translateX(0); }
+    .btn-login:hover { color: var(--bg); }
+    .btn-login span { position: relative; z-index: 1; }
+    .btn-login.loading span::after { content: ''; display: inline-block; width: 8px; height: 8px; border: 1px solid currentColor; border-top-color: transparent; border-radius: 50%; margin-left: 10px; animation: spin 0.6s linear infinite; vertical-align: middle; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .error-msg { display: none; padding: 10px 16px; background: rgba(255,34,68,0.08); border: 1px solid rgba(255,34,68,0.3); color: var(--red); font-size: 10px; letter-spacing: 1px; margin-top: 12px; }
+    .error-msg.show { display: block; animation: shake 0.4s ease; }
+    @keyframes shake { 0%, 100% { transform: translateX(0); } 20%, 60% { transform: translateX(-6px); } 40%, 80% { transform: translateX(6px); } }
+    .auth-note { font-size: 9px; color: var(--muted); text-align: center; margin-top: 14px; letter-spacing: 1px; animation: fieldIn 0.6s 0.5s both; line-height: 1.6; }
+    .panel__footer { padding: 14px 28px; border-top: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; font-size: 8px; color: var(--muted); letter-spacing: 1px; }
+    .ticker { position: fixed; bottom: 0; left: 0; right: 0; height: 24px; background: rgba(0,212,255,0.05); border-top: 1px solid var(--border); overflow: hidden; z-index: 50; display: flex; align-items: center; }
+    .ticker__track { display: flex; white-space: nowrap; animation: tickerScroll 30s linear infinite; font-size: 9px; color: var(--muted); letter-spacing: 2px; gap: 60px; }
+    @keyframes tickerScroll { from { transform: translateX(100vw); } to { transform: translateX(-100%); } }
+    .t-a { color: var(--accent); }
+  </style>
+</head>
+<body>
+  <div class="corner corner--tl"></div>
+  <div class="corner corner--tr"></div>
+  <div class="corner corner--bl"></div>
+  <div class="corner corner--br"></div>
+  <div class="noise" style="left:5%;animation-duration:18s;animation-delay:0s">0x4F52 TEAM_DATA MATCH_3 AUTO_SCORE DIMENSIONALITY_REDUCTION TX_HASH</div>
+  <div class="noise" style="left:75%;animation-duration:22s;animation-delay:4s">0xD3F1 TELE_OP CLIMB_3 SCOUT_ID ODDS_2.4x FUJO_V2</div>
+  <div class="noise" style="left:45%;animation-duration:15s;animation-delay:9s">NOTE_COUNT MATCH_19 ALLIANCE_RED WIN_PROB GRID_SCORE</div>
+
+  <div class="panel">
+    <div class="panel__header">
+      <div class="system-tag">SYSTEM ONLINE // AUTH PORTAL</div>
+      <div class="panel__title">PROJECT <span>FUJO</span></div>
+      <div class="panel__subtitle">FRC ANALYTICS QUIZZING</div>
+    </div>
+    <div class="status-bar">
+      <div class="status-item">
+        <div class="status-dot status-dot--yellow" id="workerDot"></div>
+        <span id="workerStatus">CONNECTING...</span>
+      </div>
+      <div class="status-item" style="margin-left:auto;">
+        <span id="clock">--:--:--</span>
+      </div>
+    </div>
+    <div class="panel__body">
+      <form id="loginForm" onsubmit="handleLogin(event)">
+        <div class="field">
+          <div class="field__label">
+            SCOUT ID
+            <span class="field__label-hint">FIRST NAME + LAST INITIAL</span>
+          </div>
+          <div class="field__input-wrap">
+            <input class="field__input" id="username" type="text" placeholder="your_user_id" autocomplete="off" spellcheck="false" />
+            <div class="field__focus-line"></div>
+          </div>
+        </div>
+        <div class="field">
+          <div class="field__label">
+            PASSKEY
+            <span class="field__label-hint">PUT IN ANYTHING</span>
+          </div>
+          <div class="field__input-wrap">
+            <input class="field__input" id="password" type="password" placeholder="••••••••••••" autocomplete="current-password" />
+            <div class="field__focus-line"></div>
+          </div>
+        </div>
+        <button class="btn-login" type="submit" id="loginBtn">
+          <span id="loginBtnText">AUTHENTICATE & ENTER</span>
+        </button>
+        <div class="error-msg" id="errorMsg">⚠ USER NOT FOUND</div>
+        <div class="auth-note">
+          ⓘ LOGIN VALIDATES YOUR ID AGAINST THE LIVE ROSTER <br>
+        </div>
+      </form>
+    </div>
+    <div class="panel__footer">
+      <span>FUJO API v2.0 // POWERED BY <a href="https://www.thebluealliance.com/apidocs?utm_source=peardict" target="_blank" rel="noopener noreferrer" style="color:#00d4ff;">THE BLUE ALLIANCE</a></span>
+      <span id="rosterCount">LOADING...</span>
+    </div>
+  </div>
+
+  <div class="ticker">
+    <div class="ticker__track" id="tickerTrack">
+      <span>CONNECTING TO FUJO BACKEND // fujo-worker.misha-a-golubev.workers.dev</span>
+    </div>
+  </div>
+
+  <script>
+    const API_BASE = "https://fujo-worker.misha-a-golubev.workers.dev";
+    let usersCache = {};
+
+    // Clock
+    setInterval(() => { document.getElementById('clock').textContent = new Date().toTimeString().slice(0,8); }, 1000);
+    document.getElementById('clock').textContent = new Date().toTimeString().slice(0,8);
+
+    async function init() {
+      const dot = document.getElementById('workerDot');
+      const statusEl = document.getElementById('workerStatus');
+      try {
+        const [uRes, mRes] = await Promise.all([
+          fetch(`${API_BASE}/api/users`),
+          fetch(`${API_BASE}/api/matches`)
+        ]);
+        const uData = await uRes.json();
+        const mData = await mRes.json();
+
+        // Cache users
+        for (const u of uData.users) usersCache[u.user_id] = u;
+        document.getElementById('rosterCount').textContent = `${uData.users.length} SCOUTS REGISTERED`;
+
+        // Worker online
+        dot.className = 'status-dot status-dot--green';
+        statusEl.textContent = 'WORKER LIVE';
+
+        // Build ticker from open matches
+        if (mData.matches && mData.matches.length) {
+          const open = mData.matches.filter(m => !m.has_score);
+          const closed = mData.matches.filter(m => m.has_score);
+          const parts = [];
+          open.slice(0, 6).forEach(m => parts.push(`${m.match_id} // <span class="t-a">${m.blue_team} vs ${m.red_team}</span> // ${m.market_status || 'OPEN'}`));
+          if (closed.length) parts.push(`<span class="t-a">${closed.length} MATCHES COMPLETED</span>`);
+          document.getElementById('tickerTrack').innerHTML = parts.map(p => `<span>${p}</span>`).join('<span style="margin:0 30px;opacity:0.3">◆</span>');
+        }
+      } catch(e) {
+        dot.className = 'status-dot status-dot--red';
+        statusEl.textContent = 'WORKER OFFLINE';
+        document.getElementById('rosterCount').textContent = 'BACKEND UNREACHABLE';
+        document.getElementById('tickerTrack').innerHTML = '<span style="color:var(--red)">⚠ CANNOT REACH fujo-worker.misha-a-golubev.workers.dev — CHECK WORKER DEPLOYMENT</span>';
+      }
+    }
+
+    init();
+
+    async function handleLogin(e) {
+      e.preventDefault();
+      const btn = document.getElementById('loginBtn');
+      const btnText = document.getElementById('loginBtnText');
+      const errorMsg = document.getElementById('errorMsg');
+      const username = document.getElementById('username').value.trim();
+      const password = document.getElementById('password').value;
+
+      errorMsg.classList.remove('show');
+      if (!username || !password) {
+        errorMsg.textContent = '⚠ BOTH FIELDS ARE REQUIRED';
+        errorMsg.classList.add('show');
+        return;
+      }
+
+      btn.classList.add('loading');
+      btn.disabled = true;
+      btnText.textContent = 'VERIFYING';
+
+      // Fetch users if not yet cached (e.g. worker was offline on load)
+      if (!Object.keys(usersCache).length) {
+        try {
+          const res = await fetch(`${API_BASE}/api/users`);
+          const data = await res.json();
+          for (const u of data.users) usersCache[u.user_id] = u;
+        } catch(err) {
+          btn.classList.remove('loading');
+          btn.disabled = false;
+          btnText.textContent = 'AUTHENTICATE & ENTER';
+          errorMsg.textContent = '⚠ BACKEND UNREACHABLE — WORKER DOWN?';
+          errorMsg.classList.add('show');
+          return;
+        }
+      }
+
+      const user = usersCache[username];
+      if (!user) {
+        btn.classList.remove('loading');
+        btn.disabled = false;
+        btnText.textContent = 'AUTHENTICATE & ENTER';
+        errorMsg.textContent = `⚠ SCOUT ID "${username}" NOT IN ROSTER`;
+        errorMsg.classList.add('show');
+        return;
+      }
+
+      // future notes
+      // currently just validates user_id exists in /api/users (CoinRef sheet).
+      // if i were to add passwords i would: add a "password" column to CoinRef, then add a
+      // POST /api/login endpoint in fujo-worker.js that checks it and returns
+      // { ok: true, user } or { error: "..." }. + replace this block
+      // with a fetch to that endpoint.
+
+      // Store session for index.html to read
+      sessionStorage.setItem('fujo_user_id', user.user_id);
+      sessionStorage.setItem('fujo_balance', String(user.balance));
+
+      btnText.textContent = 'ACCESS GRANTED ✓';
+      btn.classList.remove('loading');
+      btn.style.background = 'var(--green)';
+      btn.style.borderColor = 'var(--green)';
+      btn.style.color = 'var(--bg)';
+
+      setTimeout(() => { window.location.href = 'index.html'; }, 700);
+    }
+  </script>
+</body>
+</html>
