@@ -1,0 +1,892 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>PEARADOX // MATCH QUIZ</title>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Mono:ital,wght@0,300;0,400;0,500;1,400&family=Syne:wght@600;700;800&display=swap" rel="stylesheet" />
+  <style>
+    /*official pearadox theme stuff*/
+    @import url('https://fonts.googleapis.com/css2?family=DM+Mono:ital,wght@0,300;0,400;0,500;1,400&family=Syne:wght@600;700;800&display=swap');
+
+    :root {
+      --bg: #f7f6f2;
+      --bg2: #eeecea;
+      --surface: #ffffff;
+      --border: #ddd9ce;
+      --border2: #c8c3b2;
+      --accent: #3d5b25;     /* official dark green */
+      --accent-light: #5abf34; /* official light green */
+      --accent2: #e2a215;    /* official gold */
+      --blue: #3a7bd5;
+      --red: #c0392b;
+      --green: #3d5b25;
+      --green-light: #5abf34;
+      --yellow: #e2a215;
+      --yellow-light: #f0bc2e;
+      --text: #1a1c14;
+      --text2: #383d28;
+      --muted: #7a7d68;
+      --muted2: #aeac98;
+      --pear: #5abf34;       /* official light green */
+    }
+
+    *{box-sizing:border-box;margin:0;padding:0;}
+    html,body{height:100%;}
+
+    /* meow */
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'DM Mono', monospace;
+      display: flex;
+      flex-direction: column;
+      min-height: 100vh;
+      background-image:
+        radial-gradient(ellipse at 15% 20%, rgba(90,191,52,0.07) 0%, transparent 50%),
+        radial-gradient(ellipse at 85% 80%, rgba(61,91,37,0.05) 0%, transparent 50%);
+    }
+
+    /* topbar */
+    .topbar {
+      display: flex;
+      align-items: center;
+      padding: 0 28px;
+      height: 56px;
+      background: var(--accent);
+      border-bottom: 3px solid var(--accent-light);
+      position: sticky;
+      top: 0;
+      z-index: 200;
+      box-shadow: 0 2px 16px rgba(61,91,37,0.25);
+    }
+    .topbar__logo {
+      font-family: 'Syne', sans-serif;
+      font-size: 17px;
+      font-weight: 800;
+      letter-spacing: 0.5px;
+      color: #fff;
+    }
+    .topbar__logo span { color: var(--yellow-light); }
+    .topbar__tag {
+      font-size: 9px;
+      color: rgba(255,255,255,0.45);
+      letter-spacing: 2px;
+      margin-left: 16px;
+      text-transform: uppercase;
+    }
+    .topbar__right { margin-left: auto; display: flex; align-items: center; gap: 12px; }
+
+    .hud-pill {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 5px 14px;
+      background: rgba(255,255,255,0.12);
+      border: 1px solid rgba(255,255,255,0.18);
+      font-size: 10px;
+      border-radius: 2px;
+    }
+    .hud-pill__label { color: rgba(255,255,255,0.55); letter-spacing: 1px; font-size: 9px; }
+    .hud-pill__value { color: #fff; font-family: 'Syne', sans-serif; font-size: 12px; font-weight: 700; }
+    .hud-pill__value.green { color: var(--yellow-light); }
+
+    .dot { width: 6px; height: 6px; border-radius: 50%; }
+    .dot-live { background: var(--yellow-light); box-shadow: 0 0 6px var(--yellow-light); animation: blink 1.4s infinite; }
+    @keyframes blink { 0%,100%{opacity:1;} 50%{opacity:0.3;} }
+
+    .btn-logout {
+      padding: 5px 14px;
+      background: transparent;
+      border: 1px solid rgba(255,255,255,0.3);
+      color: rgba(255,255,255,0.7);
+      font-family: 'DM Mono', monospace;
+      font-size: 9px;
+      letter-spacing: 1px;
+      cursor: pointer;
+      transition: all 0.2s;
+      border-radius: 2px;
+    }
+    .btn-logout:hover { border-color: #fff; color: #fff; }
+
+    .btn-leaderboard {
+      padding: 5px 14px;
+      background: var(--yellow-light);
+      border: none;
+      color: var(--accent);
+      font-family: 'DM Mono', monospace;
+      font-size: 9px;
+      letter-spacing: 1px;
+      cursor: pointer;
+      font-weight: 500;
+      transition: all 0.2s;
+      border-radius: 2px;
+    }
+    .btn-leaderboard:hover { background: #fff; }
+
+    /*  layout */
+    .app { display: flex; flex: 1; height: calc(100vh - 80px); overflow: hidden; }
+    .content { flex: 1; display: flex; overflow: hidden; }
+    .main { flex: 1; overflow-y: auto; padding: 20px; display: flex; flex-direction: column; gap: 14px; }
+    .lb-col { width: 360px; min-width: 360px; border-left: 1px solid var(--border); display: flex; flex-direction: column; overflow: hidden; background: var(--surface); }
+
+    /* sidebar */
+    .sidebar {
+      width: 260px;
+      min-width: 260px;
+      background: var(--surface);
+      border-right: 1px solid var(--border);
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+    .sidebar__head {
+      padding: 14px 16px 12px;
+      border-bottom: 1px solid var(--border);
+      background: var(--bg2);
+    }
+    .sidebar__title {
+      font-family: 'Syne', sans-serif;
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: 1px;
+      color: var(--accent);
+      text-transform: uppercase;
+    }
+    .sidebar__meta { font-size: 9px; color: var(--muted); margin-top: 2px; }
+    .sidebar__list { overflow-y: auto; flex: 1; }
+
+    .match-item {
+      padding: 11px 16px;
+      border-bottom: 1px solid var(--border);
+      cursor: pointer;
+      transition: background 0.12s;
+      position: relative;
+    }
+    .match-item:hover { background: rgba(90,191,52,0.05); }
+    .match-item.selected {
+      background: rgba(61,91,37,0.07);
+      border-left: 3px solid var(--accent);
+    }
+    .match-item__id { font-size: 8px; color: var(--pear); letter-spacing: 1px; font-weight: 500; }
+    .match-item__teams { font-size: 11px; color: var(--text); margin: 3px 0; }
+    .match-item__teams .bl { color: var(--blue); }
+    .match-item__teams .rd { color: var(--red); }
+    .match-item__foot { display: flex; align-items: center; justify-content: space-between; }
+    .match-item__score { font-size: 9px; color: var(--muted); }
+
+    .badge { display: inline-block; padding: 1px 7px; font-size: 7px; letter-spacing: 1px; text-transform: uppercase; border-radius: 2px; }
+    .badge-open { background: rgba(45,106,79,0.1); border: 1px solid rgba(61,91,37,0.25); color: var(--accent); }
+    .badge-closed { background: rgba(192,57,43,0.08); border: 1px solid rgba(192,57,43,0.2); color: var(--red); }
+
+    /* prediction panel */
+    .bet-panel {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      padding: 22px;
+      position: relative;
+      overflow: hidden;
+      border-radius: 2px;
+    }
+    .bet-panel::before {
+      content: '';
+      position: absolute;
+      top: 0; left: 0; right: 0;
+      height: 3px;
+      background: linear-gradient(90deg, var(--accent-light), var(--accent));
+    }
+    .bet-panel__title {
+      font-family: 'Syne', sans-serif;
+      font-size: 20px;
+      font-weight: 800;
+      letter-spacing: 0;
+      color: var(--text);
+      margin-bottom: 3px;
+    }
+    .bet-panel__sub { font-size: 9px; color: var(--muted); letter-spacing: 0.5px; margin-bottom: 18px; }
+
+    .alliance-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 16px; }
+    .alliance-card {
+      padding: 16px;
+      border: 1.5px solid var(--border);
+      cursor: pointer;
+      transition: all 0.18s;
+      position: relative;
+      text-align: center;
+      border-radius: 3px;
+      background: var(--bg);
+    }
+    .alliance-card.blue-card:hover, .alliance-card.blue-card.selected {
+      border-color: var(--blue);
+      background: rgba(58,123,213,0.06);
+    }
+    .alliance-card.red-card:hover, .alliance-card.red-card.selected {
+      border-color: var(--red);
+      background: rgba(192,57,43,0.06);
+    }
+    .alliance-card__label { font-size: 8px; letter-spacing: 2px; text-transform: uppercase; margin-bottom: 6px; font-weight: 500; }
+    .blue-card .alliance-card__label { color: var(--blue); }
+    .red-card .alliance-card__label { color: var(--red); }
+    .alliance-card__teams { font-size: 11px; color: var(--text2); line-height: 1.6; }
+    .alliance-card__odds { font-family: 'Syne', sans-serif; font-size: 18px; font-weight: 700; margin-top: 8px; }
+    .blue-card .alliance-card__odds { color: var(--blue); }
+    .red-card .alliance-card__odds { color: var(--red); }
+    .alliance-card__pool { font-size: 8px; color: var(--muted); margin-top: 3px; }
+    .sel-check { position: absolute; top: 7px; right: 9px; font-size: 10px; }
+    .blue-card.selected .sel-check { color: var(--blue); }
+    .red-card.selected .sel-check { color: var(--red); }
+
+    .quiz-preview {
+      display: flex;
+      gap: 0;
+      margin-bottom: 16px;
+      border: 1px solid rgba(61,91,37,0.15);
+      background: rgba(90,191,52,0.03);
+      border-radius: 2px;
+    }
+    .preview-item { flex: 1; text-align: center; padding: 12px 8px; }
+    .preview-item__label { font-size: 7px; color: var(--muted); letter-spacing: 2px; margin-bottom: 4px; text-transform: uppercase; }
+    .preview-item__value { font-family: 'Syne', sans-serif; font-size: 15px; font-weight: 700; color: var(--accent-light); }
+    .preview-item__value.dim { color: var(--muted); font-size: 12px; font-family: 'DM Mono', monospace; font-weight: 400; }
+    .payout-sep { width: 1px; background: var(--border); align-self: stretch; }
+
+    /* submit button */
+    .btn-bet {
+      width: 100%;
+      padding: 14px;
+      background: var(--accent);
+      border: none;
+      color: #fff;
+      font-family: 'Syne', sans-serif;
+      font-size: 12px;
+      font-weight: 700;
+      letter-spacing: 2px;
+      cursor: pointer;
+      position: relative;
+      overflow: hidden;
+      transition: background 0.2s, transform 0.1s;
+      border-radius: 2px;
+    }
+    .btn-bet::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: var(--accent-light);
+      transform: translateX(-101%);
+      transition: transform 0.3s cubic-bezier(0.16,1,0.3,1);
+    }
+    .btn-bet:hover:not(:disabled)::before { transform: translateX(0); }
+    .btn-bet:disabled { opacity: 0.35; cursor: not-allowed; background: var(--muted2); }
+    .btn-bet span { position: relative; z-index: 1; }
+    .btn-bet.loading span::after {
+      content: '';
+      display: inline-block;
+      width: 8px; height: 8px;
+      border: 1.5px solid rgba(255,255,255,0.6);
+      border-top-color: #fff;
+      border-radius: 50%;
+      margin-left: 10px;
+      animation: spin 0.6s linear infinite;
+      vertical-align: middle;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    .bet-msg { padding: 10px 14px; font-size: 10px; letter-spacing: 0.5px; margin-top: 10px; display: none; border-radius: 2px; }
+    .bet-msg.show { display: block; }
+    .bet-msg.error { background: rgba(192,57,43,0.07); border: 1px solid rgba(192,57,43,0.25); color: var(--red); }
+    .bet-msg.success { background: rgba(61,91,37,0.07); border: 1px solid rgba(61,91,37,0.25); color: var(--accent); }
+
+    /* panels */
+    .panel { background: var(--surface); border: 1px solid var(--border); border-radius: 2px; }
+    .panel__head {
+      padding: 11px 16px;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      background: var(--bg2);
+    }
+    .panel__head-title { font-size: 9px; letter-spacing: 1.5px; color: var(--accent); text-transform: uppercase; font-weight: 500; }
+    .panel__body { padding: 12px 16px; }
+
+    .bets-table { width: 100%; border-collapse: collapse; font-size: 10px; }
+    .bets-table th { font-size: 7px; letter-spacing: 1.5px; color: var(--muted); text-align: left; padding: 5px 8px; border-bottom: 1px solid var(--border); text-transform: uppercase; }
+    .bets-table td { padding: 8px 8px; border-bottom: 1px solid var(--border); vertical-align: middle; }
+    .bets-table tr:last-child td { border-bottom: none; }
+    .bets-table tr:hover td { background: rgba(90,191,52,0.03); }
+    .s-blue { color: var(--blue); font-weight: 500; }
+    .s-red { color: var(--red); font-weight: 500; }
+    .odds-val { font-family: 'Syne', sans-serif; font-size: 11px; color: var(--yellow); }
+    .empty-state { text-align: center; padding: 32px 20px; color: var(--muted2); font-size: 9px; letter-spacing: 1px; }
+
+    .no-match {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 50px 30px;
+      text-align: center;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 2px;
+      gap: 10px;
+    }
+    .no-match__icon { font-size: 32px; opacity: 0.2; }
+    .no-match__text { font-size: 9px; color: var(--muted); letter-spacing: 1.5px; line-height: 2; }
+
+    /* loading */
+    .loading-screen { display: flex; flex-direction: column; align-items: center; justify-content: center; flex: 1; gap: 14px; }
+    .loading-spinner {
+      width: 32px; height: 32px;
+      border: 2px solid var(--border);
+      border-top-color: var(--accent);
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+    }
+    .loading-text { font-size: 9px; color: var(--muted); letter-spacing: 2px; }
+    .closed-notice { text-align: center; padding: 18px; color: var(--muted); font-size: 10px; border: 1px solid var(--border); border-radius: 2px; }
+
+    /* ticker */
+    .ticker {
+      height: 26px;
+      background: var(--accent);
+      border-top: none;
+      overflow: hidden;
+      display: flex;
+      align-items: center;
+      flex-shrink: 0;
+    }
+    .ticker__track {
+      display: flex;
+      white-space: nowrap;
+      animation: tickerScroll 40s linear infinite;
+      font-size: 9px;
+      color: rgba(255,255,255,0.6);
+      letter-spacing: 1.5px;
+      gap: 60px;
+    }
+    @keyframes tickerScroll { from { transform: translateX(100vw); } to { transform: translateX(-100%); } }
+    .t-a { color: var(--yellow-light); }
+    .t-b { color: #7eb8f7; }
+    .t-r { color: #f0857a; }
+    .t-g { color: var(--yellow-light); }
+
+    /* leaderboard panel */
+    .panels-row { display: flex; gap: 14px; align-items: stretch; }
+    .panels-row .panel { flex: 1; min-width: 0; }
+
+    .nexus-panel {
+      flex: 1;
+      background: var(--surface);
+      border: none;
+      display: flex;
+      flex-direction: column;
+      position: relative;
+      overflow: hidden;
+    }
+    .nexus-panel::before { display: none; }
+    .nexus-panel__head {
+      padding: 12px 18px;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-shrink: 0;
+      background: var(--bg2);
+    }
+    .nexus-panel__title {
+      font-family: 'Syne', sans-serif;
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: 1px;
+      color: var(--accent);
+      text-transform: uppercase;
+    }
+    .nexus-panel__meta { font-size: 8px; color: var(--muted); }
+    .nexus-panel__body { flex: 1; overflow-y: auto; }
+    .nexus-err { padding: 20px 18px; font-size: 9px; color: var(--muted); letter-spacing: 0.5px; }
+
+    /* stat strip */
+    .stats-strip {
+      display: grid;
+      grid-template-columns: repeat(4,1fr);
+      gap: 1px;
+      background: var(--border);
+      border: 1px solid var(--border);
+      border-radius: 2px;
+      overflow: hidden;
+    }
+    .stats-strip::before { display: none; }
+    .stat-card {
+      background: var(--surface);
+      padding: 14px 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 5px;
+      position: relative;
+    }
+    .stat-card__label { font-size: 7px; letter-spacing: 1.5px; color: var(--muted); text-transform: uppercase; }
+    .stat-card__value { font-family:'DM Mono',monospace; font-size: 20px; font-weight: 800; line-height: 1; }
+    .stat-card__sub { font-size: 7px; color: var(--muted2); letter-spacing: 0.5px; }
+    .stat-card--points .stat-card__value { color: var(--accent); }
+    .stat-card--accuracy .stat-card__value { color: var(--yellow); }
+    .stat-card--streak .stat-card__value { color: var(--accent-light); }
+    .stat-card--rank .stat-card__value { color: var(--text); }
+    .stat-card__bar { position: absolute; bottom: 0; left: 0; height: 2px; background: currentColor; opacity: 0.2; transition: width 0.6s ease; }
+
+    /* scrollbar */
+    ::-webkit-scrollbar { width: 4px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 2px; }
+  </style>
+</head>
+<body>
+
+<div class="topbar">
+  <img src="images/pearadox-wordmark.svg" alt="Pearadox P" style="height:32px;width:auto;margin-right:10px;">
+  <div class="topbar__tag">Match Prediction Quiz</div>
+  <div class="topbar__right">
+    <div class="hud-pill">
+      <div class="dot dot-live"></div>
+      <span class="hud-pill__label">SCOUT</span>
+      <span class="hud-pill__value" id="hudUser">—</span>
+    </div>
+    <div class="hud-pill">
+      <span class="hud-pill__label">POINTS</span>
+      <span class="hud-pill__value green" id="hudBal">—</span>
+    </div>
+    <button class="btn-logout" onclick="logout()">LOGOUT</button>
+  </div>
+</div>
+
+<div class="app" id="app">
+  <div class="loading-screen" id="loadingScreen">
+    <div class="loading-spinner"></div>
+    <div class="loading-text">CONNECTING TO PEARADOX...</div>
+  </div>
+</div>
+
+<div class="ticker"><div class="ticker__track" id="tickerTrack"><span>LOADING...</span></div></div>
+
+<script>
+const API = "https://fujo-worker.misha-a-golubev.workers.dev";
+const QUIZ_POINTS = 0;
+
+// leaderboard config
+const LB_POLL_MS = 30000;
+let lbPollTimer = null;
+
+const userId = sessionStorage.getItem('fujo_user_id');
+let balance = parseFloat(sessionStorage.getItem('fujo_balance') || '0');
+if (!userId) { window.location.href = 'login.html'; }
+document.getElementById('hudUser').textContent = userId;
+document.getElementById('hudBal').textContent = balance.toLocaleString() + ' CR';
+function logout() { sessionStorage.clear(); window.location.href = 'login.html'; }
+
+let matches = [], myPicks = [], selMatch = null, selSide = null;
+
+async function init() {
+  try {
+    const [mr, br] = await Promise.all([
+      fetch(`${API}/api/matches`),
+      fetch(`${API}/api/users/${encodeURIComponent(userId)}/bets`)
+    ]);
+    matches = ((await mr.json()).matches || []).map(m => ({
+      ...m,
+      // belt and suspenders: re-derive has_score on the client in case backend sends stale/wrong value
+      has_score: m.has_score && m.blue_score !== null && m.blue_score !== "" && m.red_score !== null && m.red_score !== ""
+    }));
+    myPicks = (await br.json()).bets || [];
+    buildShell();
+    selectNextOpenMatch();
+    renderSidebar();
+    renderMain();
+    buildTicker();
+    startLeaderboardPoll();
+  } catch(e) {
+    document.getElementById('app').innerHTML = `<div class="loading-screen">
+      <div style="font-size:10px;color:var(--red);letter-spacing:2px">⚠ BACKEND UNREACHABLE: ${e.message}</div>
+      <button onclick="init()" style="margin-top:12px;padding:8px 20px;background:transparent;border:1px solid var(--accent);color:var(--accent);font-family:'DM Mono',monospace;font-size:9px;cursor:pointer;background:transparent;">RETRY</button>
+    </div>`;
+  }
+}
+
+function buildShell() {
+  document.getElementById('app').innerHTML = `
+    <div class="sidebar">
+      <div class="sidebar__head">
+        <div class="sidebar__title">Upcoming Matches</div>
+        <div class="sidebar__meta" id="sideMeta"></div>
+      </div>
+      <div class="sidebar__list" id="matchList"></div>
+    </div>
+    <div class="content">
+      <div class="main" id="mainArea"></div>
+      <div class="lb-col">
+        <div class="nexus-panel" id="nexusPanel" style="flex:1;">
+          <div class="nexus-panel__head">
+            <div class="nexus-panel__title">🏆 LEADERBOARD</div>
+            <div style="display:flex;align-items:center;gap:12px;">
+              <button id="lbToggle" onclick="toggleLbMode()" style="padding:3px 10px;background:transparent;border:1px solid var(--border2);color:var(--muted);font-family:'DM Mono',monospace;font-size:7px;letter-spacing:1px;cursor:pointer;transition:all 0.2s;" onmouseover="this.style.borderColor='var(--accent)';this.style.color='var(--accent)';this.style.background='rgba(61,91,37,0.06)'" onmouseout="this.style.borderColor='var(--border2)';this.style.color='var(--muted)';this.style.background='transparent'">SHOW ACCURACY</button>
+              <div class="nexus-panel__meta" id="lbMeta">LOADING...</div>
+            </div>
+          </div>
+          <div class="nexus-panel__body" id="nexusBody"><div class="nexus-err">LOADING LEADERBOARD...</div></div>
+        </div>
+      </div>
+    </div>`;
+}
+
+function selectNextOpenMatch() {
+  const open = matches.filter(m => !m.has_score);
+  if (open.length) {
+    selMatch = open[0];
+  }
+}
+
+function renderSidebar() {
+  const open = matches.filter(m => !m.has_score);
+  const meta = document.getElementById('sideMeta');
+  if (meta) meta.textContent = `${open.length} OPEN MATCHES`;
+
+  const list = document.getElementById('matchList');
+  if (!list) return;
+  if (!open.length) { list.innerHTML = '<div class="empty-state">NO OPEN MATCHES</div>'; return; }
+
+  list.innerHTML = open.map(m => {
+    const sel = selMatch?.match_id === m.match_id ? 'selected' : '';
+    return `<div class="match-item ${sel}" onclick="selectMatch('${m.match_id}')">
+      <div class="match-item__id">${m.match_id}</div>
+      <div class="match-item__teams">
+        <span class="bl">${m.blue_team}</span> <span style="color:var(--muted)">vs</span> <span class="rd">${m.red_team}</span>
+      </div>
+      <div class="match-item__foot">
+        <span class="badge badge-open">OPEN</span>
+        <span class="match-item__score">QUIZ PICK</span>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function renderMain() {
+  const main = document.getElementById('mainArea');
+  if (!main) return;
+  if (!selMatch) {
+    main.innerHTML = `
+      <div class="no-match">
+        <div class="no-match__icon">🍐</div>
+        <div class="no-match__text">NO UPCOMING OPEN MATCHES<br>CHECK BACK AFTER NEW DATA SYNC</div>
+      </div>
+      ${myPicksHTML('YOUR PICK HISTORY', myPicks)}
+      ${statsStripHTML()}`;
+    return;
+  }
+
+  const m = selMatch;
+  const mp = myPicks.filter(b => b.match_id === m.match_id);
+  const existingPick = mp.length > 0 ? mp[mp.length - 1] : null;
+
+  // show locked state if picked
+  if (existingPick) {
+    const lockedSide = existingPick.side;
+    main.innerHTML = `
+    <div class="bet-panel">
+      <div class="bet-panel__title">${m.match_id}</div>
+      <div class="bet-panel__sub">PICK LOCKED IN — ${lockedSide.toUpperCase()} ALLIANCE</div>
+
+      <div class="alliance-row">
+        <div class="alliance-card blue-card ${lockedSide==='blue'?'selected':''}" style="cursor:not-allowed;opacity:${lockedSide==='blue'?'1':'0.4'}">
+          <div class="sel-check">${lockedSide==='blue'?'✓':''}</div>
+          <div class="alliance-card__label">🔵 BLUE ALLIANCE</div>
+          <div class="alliance-card__teams">${m.blue_team}</div>
+          <div class="alliance-card__odds">PICK</div>
+          <div class="alliance-card__pool">QUIZ SELECTION</div>
+        </div>
+        <div class="alliance-card red-card ${lockedSide==='red'?'selected':''}" style="cursor:not-allowed;opacity:${lockedSide==='red'?'1':'0.4'}">
+          <div class="sel-check">${lockedSide==='red'?'✓':''}</div>
+          <div class="alliance-card__label">🔴 RED ALLIANCE</div>
+          <div class="alliance-card__teams">${m.red_team}</div>
+          <div class="alliance-card__odds">PICK</div>
+          <div class="alliance-card__pool">QUIZ SELECTION</div>
+        </div>
+      </div>
+
+      <div class="bet-msg success show">✓ PICK ALREADY SUBMITTED — ${lockedSide.toUpperCase()} ALLIANCE LOCKED FOR ${m.match_id}</div>
+    </div>
+    ${myPicksHTML(m.match_id + ' — YOUR PICKS', mp)}
+    ${statsStripHTML()}`;
+    return;
+  }
+
+  main.innerHTML = `
+    <div class="bet-panel">
+      <div class="bet-panel__title">${m.match_id}</div>
+      <div class="bet-panel__sub">${m.market_status || 'MATCH OPEN'} • PICK THE WINNER FOR +100 IF CORRECT</div>
+
+      <div class="alliance-row">
+        <div class="alliance-card blue-card ${selSide==='blue'?'selected':''}" onclick="selectSide('blue')">
+          <div class="sel-check">${selSide==='blue'?'✓':''}</div>
+          <div class="alliance-card__label">🔵 BLUE ALLIANCE</div>
+          <div class="alliance-card__teams">${m.blue_team}</div>
+          <div class="alliance-card__odds">PICK</div>
+          <div class="alliance-card__pool">QUIZ SELECTION</div>
+        </div>
+        <div class="alliance-card red-card ${selSide==='red'?'selected':''}" onclick="selectSide('red')">
+          <div class="sel-check">${selSide==='red'?'✓':''}</div>
+          <div class="alliance-card__label">🔴 RED ALLIANCE</div>
+          <div class="alliance-card__teams">${m.red_team}</div>
+          <div class="alliance-card__odds">PICK</div>
+          <div class="alliance-card__pool">QUIZ SELECTION</div>
+        </div>
+      </div>
+
+      <div class="quiz-preview">
+        <div class="preview-item">
+          <div class="preview-item__label">MATCH</div>
+          <div class="preview-item__value dim">${m.match_id}</div>
+        </div>
+        <div class="payout-sep"></div>
+        <div class="preview-item">
+          <div class="preview-item__label">QUIZ POINTS</div>
+          <div class="preview-item__value">${QUIZ_POINTS}</div>
+        </div>
+        <div class="payout-sep"></div>
+        <div class="preview-item">
+          <div class="preview-item__label">SELECTED SIDE</div>
+          <div class="preview-item__value dim">${selSide ? selSide.toUpperCase() : '—'}</div>
+        </div>
+      </div>
+
+      <button class="btn-bet" id="betBtn" onclick="submitPick()" ${selSide?'':'disabled'}>
+        <span id="betBtnText">${selSide ? `LOCK ${selSide.toUpperCase()} PICK` : 'SELECT A SIDE'}</span>
+      </button>
+      <div class="bet-msg" id="betMsg"></div>
+    </div>
+    ${myPicksHTML(m.match_id + ' — YOUR PICKS', mp)}
+    ${statsStripHTML()}`;
+}
+
+function selectMatch(id) {
+  selMatch = matches.find(m => m.match_id === id) || null;
+  selSide = null;
+  renderSidebar();
+  renderMain();
+}
+
+function selectSide(side) {
+  selSide = side;
+  renderMain();
+}
+
+async function submitPick() {
+  const msg = document.getElementById('betMsg');
+  const btn = document.getElementById('betBtn');
+  const txt = document.getElementById('betBtnText');
+  if (!selMatch || !selSide) return;
+
+  btn.classList.add('loading'); btn.disabled = true; txt.textContent = 'SUBMITTING';
+  msg.className='bet-msg';
+
+  try {
+    const res = await fetch(`${API}/api/bets`, {
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({ user_id:userId, match_id:selMatch.match_id, side:selSide, stake: QUIZ_POINTS })
+    });
+    const data = await res.json();
+    if (data.error) throw new Error(data.error);
+
+    balance = data.balance;
+    sessionStorage.setItem('fujo_balance', String(balance));
+    document.getElementById('hudBal').textContent = balance.toLocaleString() + ' CR';
+
+    myPicks.push(data.bet);
+    msg.textContent = `✓ PICK LOCKED — ${selSide.toUpperCase()} FOR ${selMatch.match_id} // 100 POINT QUIZ ENTRY`;
+    msg.className='bet-msg success show';
+    btn.classList.remove('loading');
+    txt.textContent='PICK SUBMITTED ✓';
+    btn.style.borderColor='var(--green)'; btn.style.color='var(--green)';
+
+    setTimeout(() => { selSide=null; renderSidebar(); renderMain(); buildTicker(); }, 1400);
+
+  } catch(e) {
+    msg.textContent=`⚠ ${e.message.toUpperCase()}`;
+    msg.className='bet-msg error show';
+    btn.classList.remove('loading'); btn.disabled=false; txt.textContent='RETRY PICK';
+  }
+}
+
+function myPicksHTML(title, bets) {
+  const rows = [...bets].reverse().slice(0,20);
+  return `<div class="panel">
+    <div class="panel__head">
+      <div class="panel__head-title">${title}</div>
+      <div style="font-size:8px;color:var(--muted)">${rows.length} RECORDS</div>
+    </div>
+    <div class="panel__body">
+      ${rows.length===0 ? '<div class="empty-state">NO PICKS YET — MAKE YOUR FIRST QUIZ PICK</div>' : `
+      <table class="bets-table">
+        <thead><tr><th>MATCH</th><th>SIDE</th><th>TIME</th></tr></thead>
+        <tbody>${rows.map(b=>`<tr>
+          <td>${b.match_id}</td>
+          <td class="${b.side==='blue'?'s-blue':'s-red'}">${b.side.toUpperCase()}</td>
+          <td style="color:var(--muted);font-size:8px">${b.created_at?new Date(b.created_at).toLocaleTimeString():'—'}</td>
+        </tr>`).join('')}</tbody>
+      </table>`}
+    </div>
+  </div>`;
+}
+
+// lb
+let lbMode = 'points'; // 'points' | 'accuracy'
+let lbData = [];
+
+async function fetchLeaderboard() {
+  const body = document.getElementById('nexusBody');
+  const meta = document.getElementById('lbMeta');
+  try {
+    const res = await fetch(`${API}/api/leaderboard`);
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    const data = await res.json();
+    lbData = data.leaderboard || [];
+    renderLeaderboard();
+    if (meta) meta.textContent = `${lbData.length} SCOUTS`;
+  } catch(e) {
+    if (body) body.innerHTML = `<div style="padding:20px 18px;font-size:9px;color:var(--red);letter-spacing:1px;">⚠ LEADERBOARD UNAVAILABLE<br><span style="color:var(--muted);font-size:8px;">${e.message.toUpperCase()}</span></div>`;
+    if (meta) meta.textContent = 'ERROR';
+  }
+}
+
+function toggleLbMode() {
+  lbMode = lbMode === 'points' ? 'accuracy' : 'points';
+  const btn = document.getElementById('lbToggle');
+  if (btn) btn.textContent = lbMode === 'points' ? 'SHOW ACCURACY' : 'SHOW POINTS';
+  renderLeaderboard();
+}
+
+function renderLeaderboard() {
+  const body = document.getElementById('nexusBody');
+  if (!body || !lbData.length) return;
+
+  const byPoints   = [...lbData].sort((a,b) => b.balance - a.balance);
+  const byAccuracy = [...lbData].sort((a,b) => b.accuracy - a.accuracy);
+  const sorted = lbMode === 'points' ? byPoints : byAccuracy;
+
+  const myRank = sorted.findIndex(u => u.user_id === userId) + 1;
+  const medals = ['🥇','🥈','🥉'];
+
+  const rows = sorted.map((u, i) => {
+    const isMe = u.user_id === userId;
+    const medal = medals[i] || String(i+1);
+    const mainVal = lbMode === 'points'
+      ? `<span style="font-family:'Orbitron',sans-serif;font-size:11px;font-weight:700;color:var(--green);">${u.balance.toLocaleString()}</span>`
+      : `<span style="font-family:'Orbitron',sans-serif;font-size:11px;font-weight:700;color:var(--yellow);">${u.total_picks > 0 ? Math.round(u.accuracy*100)+'%' : '0%'}</span>`;
+    const subVal = lbMode === 'points'
+      ? `<span style="font-size:8px;color:var(--muted);">${u.total_picks > 0 ? Math.round(u.accuracy*100)+'%' : '0%'}</span>`
+      : `<span style="font-size:8px;color:var(--muted);">${u.balance.toLocaleString()} PTS</span>`;
+
+    return `<div style="display:grid;grid-template-columns:32px 1fr auto auto;align-items:center;gap:8px;padding:8px 18px;border-bottom:1px solid var(--border);${isMe?'background:rgba(61,91,37,0.07);border-left:2px solid var(--accent);':''}">
+      <div style="font-size:${i<3?'13px':'9px'};text-align:center;color:var(--muted);">${medal}</div>
+      <div style="font-size:10px;color:${isMe?'var(--accent)':'var(--text2)'};">${u.user_id}${isMe?' ◄':''}</div>
+      ${subVal}
+      ${mainVal}
+    </div>`;
+  }).join('');
+
+  body.innerHTML = `
+    <div style="display:grid;grid-template-columns:32px 1fr auto auto;gap:8px;padding:8px 18px;border-bottom:1px solid var(--border);font-size:7px;color:var(--muted);letter-spacing:1px;background:var(--bg2);">
+      <div></div>
+      <div>SCOUT</div>
+      <div>${lbMode==='points'?'ACC':'PTS'}</div>
+      <div>${lbMode==='points'?'PTS':'ACC'}</div>
+    </div>
+    ${rows}
+    ${myRank > 0 ? `<div style="padding:8px 18px;font-size:8px;color:var(--muted);text-align:center;border-top:1px solid var(--border);background:var(--bg2);">YOUR RANK: <span style="color:var(--accent);font-family:'Orbitron',sans-serif;">#${myRank}</span> OF ${sorted.length}</div>` : ''}`;
+}
+
+function startLeaderboardPoll() {
+  fetchLeaderboard();
+  lbPollTimer = setInterval(fetchLeaderboard, LB_POLL_MS);
+}
+
+function statsStripHTML() {
+  // points
+  const pts = balance.toLocaleString();
+
+  // accuracy from lbData if available, else derive from myPicks result field
+  let acc = '—';
+  if (lbData.length) {
+    const me = lbData.find(u => u.user_id === userId);
+    if (me) acc = me.total_picks > 0 ? Math.round(me.accuracy * 100) + '%' : '0%';
+  }
+
+  // streak — count consecutive correct picks from most recent backwards
+  // a pick is "correct" if points_received === 100, which maps to result === 'correct' if set,
+  // or we can derive from lbData correct_picks count ig for streak we need ordered history
+  // so we use myPicks order and check against lbData totals as a proxy?
+  // js do it clientside
+  let streak = '—';
+  let streakSub = 'STREAK';
+  const me = lbData.find(u => u.user_id === userId);
+  if (me && me.correct_picks > 0) {
+    streak = me.correct_picks;
+    streakSub = 'CORRECT PICKS';
+  } else if (myPicks.length === 0) {
+    streak = '0';
+    streakSub = 'CORRECT PICKS';
+  }
+
+  // rank
+  let rank = '—';
+  let rankSub = 'GLOBAL RANK';
+  if (lbData.length) {
+    const sorted = [...lbData].sort((a,b) => b.balance - a.balance);
+    const idx = sorted.findIndex(u => u.user_id === userId);
+    if (idx >= 0) { rank = '#' + (idx + 1); rankSub = `OF ${sorted.length} SCOUTS`; }
+  }
+
+  // total picks
+  const totalPicks = myPicks.length;
+
+  return `<div class="stats-strip">
+    <div class="stat-card stat-card--points">
+      <div class="stat-card__label">POINTS</div>
+      <div class="stat-card__value">${pts}</div>
+      <div class="stat-card__sub">${totalPicks} PICKS MADE</div>
+      <div class="stat-card__bar" style="color:var(--green);width:100%;"></div>
+    </div>
+    <div class="stat-card stat-card--accuracy">
+      <div class="stat-card__label">ACCURACY</div>
+      <div class="stat-card__value">${acc}</div>
+      <div class="stat-card__sub">${me ? me.correct_picks + ' / ' + me.total_picks + ' CORRECT' : 'NO DATA YET'}</div>
+      <div class="stat-card__bar" style="color:var(--yellow);width:${me && me.total_picks > 0 ? Math.round(me.accuracy*100) : 0}%;"></div>
+    </div>
+    <div class="stat-card stat-card--streak">
+      <div class="stat-card__label">${streakSub}</div>
+      <div class="stat-card__value">${streak}</div>
+      <div class="stat-card__sub">PICKS RESOLVED</div>
+      <div class="stat-card__bar" style="color:var(--accent2);width:${me && me.total_picks > 0 ? Math.round((me.correct_picks/me.total_picks)*100) : 0}%;"></div>
+    </div>
+    <div class="stat-card stat-card--rank">
+      <div class="stat-card__label">RANK</div>
+      <div class="stat-card__value">${rank}</div>
+      <div class="stat-card__sub">${rankSub}</div>
+      <div class="stat-card__bar" style="color:var(--accent);width:100%;"></div>
+    </div>
+  </div>`;
+}
+
+function buildTicker() {
+  const open = matches.filter(m=>!m.has_score);
+  const closed = matches.filter(m=>m.has_score);
+  const parts = [];
+  open.slice(0,5).forEach(m=>parts.push(`${m.match_id} // <span class="t-b">${m.blue_team}</span> vs <span class="t-r">${m.red_team}</span> // <span class="t-g">OPEN QUIZ</span>`));
+  closed.slice(0,4).forEach(m=>parts.push(`${m.match_id} FINAL: <span class="t-b">${m.blue_score}</span>–<span class="t-r">${m.red_score}</span> <span class="t-a">${m.winner?.toUpperCase()||'?'} WIN</span>`));
+  parts.push(`YOUR PICKS: <span class="t-g">${myPicks.length}</span> // BALANCE: <span class="t-g">${balance.toLocaleString()} CR</span>`);
+  parts.push(`DATA POWERED BY <a href="https://www.thebluealliance.com" target="_blank" style="color:var(--yellow-light);text-decoration:none;letter-spacing:1px;">THE BLUE ALLIANCE</a>`);
+  document.getElementById('tickerTrack').innerHTML = parts.map(p=>`<span>${p}</span>`).join('<span style="opacity:0.3;margin:0 30px">◆</span>');
+}
+
+init();
+</script>
+</body>
+</html>

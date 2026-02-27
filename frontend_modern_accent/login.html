@@ -1,0 +1,612 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Project Peardict Login</title>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@300;400;500&family=Syne:wght@600;700;800&display=swap" rel="stylesheet" />
+  <style>
+    /* ── OFFICIAL TEAM 5414 BRAND COLORS ── */
+    :root {
+      --green-light: #5abf34;
+      --green-dark:  #3d5b25;
+      --gold:        #e2a215;
+      --white:       #ffffff;
+      --bg:          #f7f6f2;
+      --bg2:         #eeecea;
+      --border:      #ddd9ce;
+      --border2:     #c8c3b2;
+      --text:        #1a1c14;
+      --muted:       #7a7d68;
+      --muted2:      #b0ae9c;
+      --red:         #c0392b;
+      --gold-light:  #f0bc2e;
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html, body { height: 100%; }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'DM Mono', monospace;
+      display: flex;
+      flex-direction: column;
+      min-height: 100vh;
+      overflow: hidden;
+      position: relative;
+    }
+
+    /* ── BACKGROUND ────────────────────── */
+    /* Subtle dot grid */
+    body::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background-image: radial-gradient(circle, rgba(61,91,37,0.12) 1px, transparent 1px);
+      background-size: 28px 28px;
+      pointer-events: none;
+    }
+
+    /* Brand color blobs */
+    .bg-blob {
+      position: fixed;
+      border-radius: 50%;
+      filter: blur(80px);
+      pointer-events: none;
+      opacity: 0.18;
+    }
+    .bg-blob--1 {
+      width: 420px; height: 420px;
+      background: var(--green-light);
+      top: -120px; left: -100px;
+    }
+    .bg-blob--2 {
+      width: 320px; height: 320px;
+      background: var(--gold);
+      bottom: -80px; right: -60px;
+    }
+    .bg-blob--3 {
+      width: 200px; height: 200px;
+      background: var(--green-dark);
+      top: 40%; right: 15%;
+      opacity: 0.1;
+    }
+
+    /* header bar */
+    .header {
+      position: fixed;
+      top: 0; left: 0; right: 0;
+      height: 52px;
+      background: var(--green-dark);
+      border-bottom: 3px solid var(--green-light);
+      display: flex;
+      align-items: center;
+      padding: 0 28px;
+      z-index: 100;
+      box-shadow: 0 2px 16px rgba(61,91,37,0.3);
+    }
+
+    /* pearadox p :3 */
+    .header__p {
+      height: 26px;
+      width: auto;
+      margin-right: 12px;
+      flex-shrink: 0;
+    }
+
+    .header__wordmark {
+      font-family: 'Syne', sans-serif;
+      font-size: 16px;
+      font-weight: 800;
+      color: var(--white);
+      letter-spacing: 0.5px;
+    }
+    .header__wordmark em {
+      font-style: italic;
+      color: var(--gold-light);
+      font-weight: 700;
+    }
+    .header__divider {
+      width: 1px;
+      height: 20px;
+      background: rgba(255,255,255,0.2);
+      margin: 0 16px;
+    }
+    .header__sub {
+      font-size: 9px;
+      color: rgba(255,255,255,0.45);
+      letter-spacing: 2px;
+      text-transform: uppercase;
+    }
+    .header__right {
+      margin-left: auto;
+      font-size: 8px;
+      color: rgba(255,255,255,0.35);
+      letter-spacing: 1px;
+    }
+    .header__dot {
+      display: inline-block;
+      width: 5px; height: 5px;
+      border-radius: 50%;
+      background: var(--green-light);
+      box-shadow: 0 0 6px var(--green-light);
+      margin-right: 6px;
+      animation: pulse 2s ease-in-out infinite;
+      vertical-align: middle;
+    }
+    @keyframes pulse { 0%,100%{opacity:1;} 50%{opacity:0.3;} }
+
+    /* main */
+    .page {
+      flex: 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 80px 20px 60px;
+      position: relative;
+      z-index: 10;
+    }
+
+    /* card */
+    .card {
+      width: 420px;
+      background: var(--white);
+      border: 1px solid var(--border);
+      box-shadow: 0 4px 32px rgba(61,91,37,0.1), 0 1px 4px rgba(61,91,37,0.06);
+      animation: cardIn 0.7s cubic-bezier(0.16,1,0.3,1) both;
+      position: relative;
+      overflow: hidden;
+    }
+    @keyframes cardIn {
+      from { opacity:0; transform: translateY(24px) scale(0.98); }
+      to   { opacity:1; transform: translateY(0) scale(1); }
+    }
+
+    /* top accent */
+    .card::before {
+      content: '';
+      display: block;
+      height: 4px;
+      background: linear-gradient(90deg, var(--green-dark), var(--green-light), var(--gold));
+    }
+
+    /* card header */
+    .card__head {
+      padding: 24px 28px 20px;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      gap: 18px;
+      position: relative;
+    }
+
+    /* big P  */
+    .card__logo-p {
+      width: 52px;
+      height: 52px;
+      flex-shrink: 0;
+    }
+
+    .card__title-wrap {}
+    .card__eyebrow {
+      font-size: 8px;
+      color: var(--muted);
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      margin-bottom: 4px;
+    }
+    .card__wordmark {
+      height: 32px;
+      width: auto;
+      display: block;
+    }
+    .card__subtitle {
+      font-size: 9px;
+      color: var(--muted);
+      margin-top: 5px;
+      letter-spacing: 0.5px;
+    }
+
+    /* strip */
+    .status-strip {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      padding: 8px 28px;
+      background: var(--bg2);
+      border-bottom: 1px solid var(--border);
+      font-size: 8px;
+      color: var(--muted);
+      letter-spacing: 1px;
+    }
+    .status-item { display: flex; align-items: center; gap: 5px; }
+    .status-dot {
+      width: 5px; height: 5px; border-radius: 50%;
+    }
+    .status-dot--yellow { background: var(--gold); box-shadow: 0 0 5px var(--gold); animation: pulse 1s infinite; }
+    .status-dot--green  { background: var(--green-light); box-shadow: 0 0 5px var(--green-light); animation: pulse 2s infinite; }
+    .status-dot--red    { background: var(--red); }
+    .status-time { margin-left: auto; font-variant-numeric: tabular-nums; }
+
+    /* card body */
+    .card__body { padding: 24px 28px 28px; }
+
+    .field {
+      margin-bottom: 18px;
+      animation: fieldIn 0.5s cubic-bezier(0.16,1,0.3,1) both;
+    }
+    .field:nth-child(1) { animation-delay: 0.15s; }
+    .field:nth-child(2) { animation-delay: 0.25s; }
+    @keyframes fieldIn {
+      from { opacity:0; transform:translateX(-12px); }
+      to   { opacity:1; transform:translateX(0); }
+    }
+
+    .field__label {
+      font-size: 8px;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      color: var(--green-dark);
+      font-weight: 500;
+      margin-bottom: 7px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .field__hint { color: var(--muted2); font-size: 7px; letter-spacing: 1px; }
+
+    .field__wrap { position: relative; }
+    .field__input {
+      width: 100%;
+      background: var(--bg);
+      border: 1.5px solid var(--border);
+      color: var(--text);
+      font-family: 'DM Mono', monospace;
+      font-size: 13px;
+      padding: 11px 14px;
+      outline: none;
+      transition: border-color 0.18s, background 0.18s, box-shadow 0.18s;
+      letter-spacing: 0.5px;
+      border-radius: 2px;
+    }
+    .field__input::placeholder { color: var(--muted2); }
+    .field__input:focus {
+      border-color: var(--green-light);
+      background: var(--white);
+      box-shadow: 0 0 0 3px rgba(90,191,52,0.12);
+    }
+    /* focus undermine */
+    .field__line {
+      position: absolute;
+      bottom: 0; left: 0;
+      height: 2px;
+      width: 0;
+      background: linear-gradient(90deg, var(--green-light), var(--gold));
+      transition: width 0.3s ease;
+      border-radius: 0 0 2px 2px;
+    }
+    .field__input:focus + .field__line { width: 100%; }
+
+    /* submit */
+    .btn-submit {
+      width: 100%;
+      padding: 13px;
+      background: var(--green-dark);
+      border: none;
+      color: var(--white);
+      font-family: 'Syne', sans-serif;
+      font-size: 12px;
+      font-weight: 700;
+      letter-spacing: 2px;
+      cursor: pointer;
+      position: relative;
+      overflow: hidden;
+      transition: color 0.25s;
+      border-radius: 2px;
+      animation: fieldIn 0.5s cubic-bezier(0.16,1,0.3,1) 0.35s both;
+    }
+    .btn-submit::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: var(--green-light);
+      transform: translateX(-101%);
+      transition: transform 0.3s cubic-bezier(0.16,1,0.3,1);
+    }
+    .btn-submit:hover:not(:disabled)::before { transform: translateX(0); }
+    .btn-submit span { position: relative; z-index: 1; }
+    .btn-submit:disabled { opacity: 0.4; cursor: not-allowed; }
+    .btn-submit.loading span::after {
+      content: '';
+      display: inline-block;
+      width: 8px; height: 8px;
+      border: 1.5px solid rgba(255,255,255,0.5);
+      border-top-color: var(--white);
+      border-radius: 50%;
+      margin-left: 10px;
+      animation: spin 0.6s linear infinite;
+      vertical-align: middle;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* error display */
+    .error-msg {
+      display: none;
+      padding: 9px 14px;
+      background: rgba(192,57,43,0.07);
+      border: 1px solid rgba(192,57,43,0.25);
+      color: var(--red);
+      font-size: 9px;
+      letter-spacing: 0.5px;
+      margin-top: 10px;
+      border-radius: 2px;
+    }
+    .error-msg.show {
+      display: block;
+      animation: shake 0.4s ease;
+    }
+    @keyframes shake {
+      0%,100%{transform:translateX(0);}
+      20%,60%{transform:translateX(-5px);}
+      40%,80%{transform:translateX(5px);}
+    }
+
+    .auth-note {
+      font-size: 8px;
+      color: var(--muted2);
+      text-align: center;
+      margin-top: 12px;
+      letter-spacing: 0.5px;
+      line-height: 1.6;
+      animation: fieldIn 0.5s 0.45s both;
+    }
+
+    /* card footer */
+    .card__foot {
+      padding: 12px 28px;
+      border-top: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      font-size: 8px;
+      color: var(--muted);
+      letter-spacing: 0.5px;
+      background: var(--bg2);
+    }
+    .card__foot a {
+      color: var(--green-light);
+      text-decoration: none;
+    }
+    .card__foot a:hover { text-decoration: underline; }
+
+    /* ticker */
+    .ticker {
+      position: fixed;
+      bottom: 0; left: 0; right: 0;
+      height: 26px;
+      background: var(--green-dark);
+      border-top: 2px solid var(--green-light);
+      overflow: hidden;
+      z-index: 100;
+      display: flex;
+      align-items: center;
+    }
+    .ticker__track {
+      display: flex;
+      white-space: nowrap;
+      animation: tickerScroll 28s linear infinite;
+      font-size: 8px;
+      color: rgba(255,255,255,0.5);
+      letter-spacing: 1.5px;
+      gap: 60px;
+    }
+    @keyframes tickerScroll { from{transform:translateX(100vw);} to{transform:translateX(-100%);} }
+    .t-g { color: var(--green-light); }
+    .t-y { color: var(--gold-light); }
+  </style>
+</head>
+<body>
+
+<div class="bg-blob bg-blob--1"></div>
+<div class="bg-blob bg-blob--2"></div>
+<div class="bg-blob bg-blob--3"></div>
+
+<!-- header bar -->
+<div class="header">
+  <img class="header__p" src="images/pearadox-wordmark.svg" alt="Pearadox" style="height:26px;width:auto;" />
+  <div class="header__divider"></div>
+  <div class="header__sub">Robotics Team 5414</div>
+  <div class="header__right">
+    <span class="header__dot"></span>
+    <span id="headerStatus">CONNECTING...</span>
+  </div>
+</div>
+
+<!-- main card -->
+<div class="page">
+  <div class="card">
+
+    <div class="card__head">
+      <img class="card__logo-p" src="images/pearadox-p.svg" alt="Pearadox P" />
+      <div class="card__title-wrap">
+        <img class="card__wordmark" src="images/pearadox-wordmark.png" alt="Project Peardict" />
+        <div class="card__subtitle">Pearadox Robotics Team · 2025</div>
+      </div>
+    </div>
+
+    <div class="status-strip">
+      <div class="status-item">
+        <div class="status-dot status-dot--yellow" id="workerDot"></div>
+        <span id="workerStatus">CONNECTING TO BACKEND...</span>
+      </div>
+      <div class="status-time" id="clock">--:--:--</div>
+    </div>
+
+    <div class="card__body">
+      <form id="loginForm" onsubmit="handleLogin(event)">
+
+        <div class="field">
+          <div class="field__label">
+            Scout ID
+            <span class="field__hint">First name + last initial</span>
+          </div>
+          <div class="field__wrap">
+            <input class="field__input" id="username" type="text"
+              placeholder="E.g. Andrew H"
+              autocomplete="off" spellcheck="false" autocorrect="off" />
+            <div class="field__line"></div>
+          </div>
+        </div>
+
+        <div class="field">
+          <div class="field__label">
+            Passkey
+            <span class="field__hint">Put in anything</span>
+          </div>
+          <div class="field__wrap">
+            <input class="field__input" id="password" type="password"
+              placeholder="••••••••••" autocomplete="current-password" />
+            <div class="field__line"></div>
+          </div>
+        </div>
+
+        <button class="btn-submit" type="submit" id="loginBtn">
+          <span id="loginBtnText">AUTHENTICATE & ENTER</span>
+        </button>
+
+        <div class="error-msg" id="errorMsg"></div>
+
+      </form>
+    </div>
+
+    <div class="card__foot">
+      <span>FUJO API v2.0 // <a href="https://www.thebluealliance.com/apidocs" target="_blank" rel="noopener">Powered by The Blue Alliance</a></span>
+      <span id="rosterCount">Loading roster...</span>
+    </div>
+
+  </div>
+</div>
+
+<!-- ticker -->
+<div class="ticker">
+  <div class="ticker__track" id="tickerTrack">
+    <span>CONNECTING TO PEARADOX BACKEND // fujo-worker.misha-a-golubev.workers.dev</span>
+  </div>
+</div>
+
+<script>
+  const API_BASE = "https://fujo-worker.misha-a-golubev.workers.dev";
+  let usersCache = {};
+
+  // Clock
+  function tick() {
+    document.getElementById('clock').textContent = new Date().toTimeString().slice(0,8);
+  }
+  tick();
+  setInterval(tick, 1000);
+
+  async function init() {
+    const dot = document.getElementById('workerDot');
+    const statusEl = document.getElementById('workerStatus');
+    try {
+      const [uRes, mRes] = await Promise.all([
+        fetch(`${API_BASE}/api/users`),
+        fetch(`${API_BASE}/api/matches`)
+      ]);
+      const uData = await uRes.json();
+      const mData = await mRes.json();
+
+      for (const u of uData.users) usersCache[u.user_id] = u;
+
+      document.getElementById('rosterCount').textContent = `${uData.users.length} scouts registered`;
+      document.getElementById('headerStatus').textContent = 'BACKEND LIVE';
+      dot.className = 'status-dot status-dot--green';
+      statusEl.textContent = 'BACKEND ONLINE';
+
+      // build ticker
+      const matches = mData.matches || [];
+      const open = matches.filter(m => !m.has_score);
+      const closed = matches.filter(m => m.has_score);
+      const parts = [];
+      open.slice(0,5).forEach(m => parts.push(
+        `${m.match_id} <span class="t-g">OPEN</span> // <span class="t-g">${m.blue_team}</span> vs <span class="t-g">${m.red_team}</span>`
+      ));
+      if (closed.length) parts.push(`<span class="t-y">${closed.length} MATCHES COMPLETED THIS EVENT</span>`);
+      parts.push(`<span class="t-g">${open.length}</span> MATCHES OPEN FOR PREDICTIONS`);
+      parts.push(`DATA POWERED BY <a href="https://www.thebluealliance.com" target="_blank" style="color:var(--gold-light);text-decoration:none;">THE BLUE ALLIANCE</a>`);
+      document.getElementById('tickerTrack').innerHTML =
+        parts.map(p => `<span>${p}</span>`).join('<span style="opacity:0.3;margin:0 30px">◆</span>');
+
+    } catch(e) {
+      dot.className = 'status-dot status-dot--red';
+      statusEl.textContent = 'BACKEND OFFLINE';
+      document.getElementById('headerStatus').textContent = 'OFFLINE';
+      document.getElementById('rosterCount').textContent = 'Backend unreachable';
+      document.getElementById('tickerTrack').innerHTML =
+        `<span style="color:#f0857a">⚠ CANNOT REACH BACKEND — CHECK WORKER DEPLOYMENT</span>`;
+    }
+  }
+
+  init();
+  document.getElementById('username').focus();
+
+  async function handleLogin(e) {
+    e.preventDefault();
+    const btn = document.getElementById('loginBtn');
+    const btnText = document.getElementById('loginBtnText');
+    const errEl = document.getElementById('errorMsg');
+    const username = document.getElementById('username').value.trim();
+    const password = document.getElementById('password').value;
+
+    errEl.classList.remove('show');
+    if (!username || !password) {
+      errEl.textContent = '⚠ Both fields are required';
+      errEl.classList.add('show');
+      return;
+    }
+
+    btn.classList.add('loading');
+    btn.disabled = true;
+    btnText.textContent = 'VERIFYING';
+
+    // re-fetch users if cache is empty (e.g. backend was offline on load)
+    if (!Object.keys(usersCache).length) {
+      try {
+        const res = await fetch(`${API_BASE}/api/users`);
+        const data = await res.json();
+        for (const u of data.users) usersCache[u.user_id] = u;
+      } catch {
+        btn.classList.remove('loading');
+        btn.disabled = false;
+        btnText.textContent = 'AUTHENTICATE & ENTER';
+        errEl.textContent = '⚠ Backend unreachable — is the worker deployed?';
+        errEl.classList.add('show');
+        return;
+      }
+    }
+
+    const user = usersCache[username];
+    if (!user) {
+      btn.classList.remove('loading');
+      btn.disabled = false;
+      btnText.textContent = 'AUTHENTICATE & ENTER';
+      errEl.textContent = `⚠ Scout ID "${username}" not found in roster`;
+      errEl.classList.add('show');
+      return;
+    }
+
+    // authenticated -> store session and redirect
+    sessionStorage.setItem('fujo_user_id', user.user_id);
+    sessionStorage.setItem('fujo_balance', String(user.balance));
+
+    btnText.textContent = 'ACCESS GRANTED ✓';
+    btn.classList.remove('loading');
+    btn.style.background = 'var(--green-light)';
+    btn.style.color = 'var(--white)';
+
+    setTimeout(() => { window.location.href = 'index.html'; }, 700);
+  }
+</script>
+</body>
+</html>

@@ -170,6 +170,19 @@
     .nexus-err{padding:20px 18px;font-size:9px;color:var(--red);letter-spacing:1px;}
 
     ::-webkit-scrollbar{width:4px;}::-webkit-scrollbar-track{background:transparent;}::-webkit-scrollbar-thumb{background:var(--border2);}
+
+    /* STATS STRIP */
+    .stats-strip{display:grid;grid-template-columns:repeat(4,1fr);gap:1px;background:var(--border);border:1px solid var(--border);position:relative;overflow:hidden;}
+    .stats-strip::before{content:'';position:absolute;top:0;left:0;right:0;height:1px;background:linear-gradient(90deg,transparent,rgba(0,212,255,0.3),transparent);}
+    .stat-card{background:var(--surface);padding:14px 16px;display:flex;flex-direction:column;gap:5px;position:relative;}
+    .stat-card__label{font-size:7px;letter-spacing:2px;color:var(--muted);text-transform:uppercase;}
+    .stat-card__value{font-family:'Orbitron',sans-serif;font-size:18px;font-weight:700;line-height:1;}
+    .stat-card__sub{font-size:7px;color:var(--muted);letter-spacing:1px;}
+    .stat-card--points .stat-card__value{color:var(--green);}
+    .stat-card--accuracy .stat-card__value{color:var(--yellow);}
+    .stat-card--streak .stat-card__value{color:var(--accent2);}
+    .stat-card--rank .stat-card__value{color:var(--accent);}
+    .stat-card__bar{position:absolute;bottom:0;left:0;height:2px;background:currentColor;opacity:0.3;transition:width 0.6s ease;}
   </style>
 </head>
 <body>
@@ -309,7 +322,8 @@ function renderMain() {
         <div class="no-match__icon">⚡</div>
         <div class="no-match__text">NO UPCOMING OPEN MATCHES<br>CHECK BACK AFTER NEW DATA SYNC</div>
       </div>
-      ${myPicksHTML('YOUR PICK HISTORY', myPicks)}`;
+      ${myPicksHTML('YOUR PICK HISTORY', myPicks)}
+      ${statsStripHTML()}`;
     return;
   }
 
@@ -344,7 +358,8 @@ function renderMain() {
 
       <div class="bet-msg success show">✓ PICK ALREADY SUBMITTED — ${lockedSide.toUpperCase()} ALLIANCE LOCKED FOR ${m.match_id}</div>
     </div>
-    ${myPicksHTML(m.match_id + ' — YOUR PICKS', mp)}`;
+    ${myPicksHTML(m.match_id + ' — YOUR PICKS', mp)}
+    ${statsStripHTML()}`;
     return;
   }
 
@@ -392,7 +407,8 @@ function renderMain() {
       </button>
       <div class="bet-msg" id="betMsg"></div>
     </div>
-    ${myPicksHTML(m.match_id + ' — YOUR PICKS', mp)}`;
+    ${myPicksHTML(m.match_id + ' — YOUR PICKS', mp)}
+    ${statsStripHTML()}`;
 }
 
 function selectMatch(id) {
@@ -478,6 +494,7 @@ async function fetchLeaderboard() {
     const data = await res.json();
     lbData = data.leaderboard || [];
     renderLeaderboard();
+    renderMain(); // refresh stats strip now that lbData is populated
     if (meta) meta.textContent = `${lbData.length} SCOUTS`;
   } catch(e) {
     if (body) body.innerHTML = `<div style="padding:20px 18px;font-size:9px;color:var(--red);letter-spacing:1px;">⚠ LEADERBOARD UNAVAILABLE<br><span style="color:var(--muted);font-size:8px;">${e.message.toUpperCase()}</span></div>`;
@@ -535,6 +552,74 @@ function renderLeaderboard() {
 function startLeaderboardPoll() {
   fetchLeaderboard();
   lbPollTimer = setInterval(fetchLeaderboard, LB_POLL_MS);
+}
+
+function statsStripHTML() {
+  // Points
+  const pts = balance.toLocaleString();
+
+  // Accuracy — from lbData if available, else derive from myPicks result field
+  let acc = '—';
+  if (lbData.length) {
+    const me = lbData.find(u => u.user_id === userId);
+    if (me) acc = me.total_picks > 0 ? Math.round(me.accuracy * 100) + '%' : '0%';
+  }
+
+  // Streak — count consecutive correct picks from most recent backwards
+  // A pick is "correct" if points_received === 100, which maps to result === 'correct' if set,
+  // or we can derive from lbData correct_picks count. For streak we need ordered history
+  // so we use myPicks order and check against lbData totals as a proxy.
+  // Best we can do client-side without result per-pick: show total correct count as streak seed
+  let streak = '—';
+  let streakSub = 'STREAK';
+  const me = lbData.find(u => u.user_id === userId);
+  if (me && me.correct_picks > 0) {
+    // We don't have per-pick results client-side yet, show correct pick count
+    streak = me.correct_picks;
+    streakSub = 'CORRECT PICKS';
+  } else if (myPicks.length === 0) {
+    streak = '0';
+    streakSub = 'CORRECT PICKS';
+  }
+
+  // Rank
+  let rank = '—';
+  let rankSub = 'GLOBAL RANK';
+  if (lbData.length) {
+    const sorted = [...lbData].sort((a,b) => b.balance - a.balance);
+    const idx = sorted.findIndex(u => u.user_id === userId);
+    if (idx >= 0) { rank = '#' + (idx + 1); rankSub = `OF ${sorted.length} SCOUTS`; }
+  }
+
+  // Total picks
+  const totalPicks = myPicks.length;
+
+  return `<div class="stats-strip">
+    <div class="stat-card stat-card--points">
+      <div class="stat-card__label">POINTS</div>
+      <div class="stat-card__value">${pts}</div>
+      <div class="stat-card__sub">${totalPicks} PICKS MADE</div>
+      <div class="stat-card__bar" style="color:var(--green);width:100%;"></div>
+    </div>
+    <div class="stat-card stat-card--accuracy">
+      <div class="stat-card__label">ACCURACY</div>
+      <div class="stat-card__value">${acc}</div>
+      <div class="stat-card__sub">${me ? me.correct_picks + ' / ' + me.total_picks + ' CORRECT' : 'NO DATA YET'}</div>
+      <div class="stat-card__bar" style="color:var(--yellow);width:${me && me.total_picks > 0 ? Math.round(me.accuracy*100) : 0}%;"></div>
+    </div>
+    <div class="stat-card stat-card--streak">
+      <div class="stat-card__label">${streakSub}</div>
+      <div class="stat-card__value">${streak}</div>
+      <div class="stat-card__sub">PICKS RESOLVED</div>
+      <div class="stat-card__bar" style="color:var(--accent2);width:${me && me.total_picks > 0 ? Math.round((me.correct_picks/me.total_picks)*100) : 0}%;"></div>
+    </div>
+    <div class="stat-card stat-card--rank">
+      <div class="stat-card__label">RANK</div>
+      <div class="stat-card__value">${rank}</div>
+      <div class="stat-card__sub">${rankSub}</div>
+      <div class="stat-card__bar" style="color:var(--accent);width:100%;"></div>
+    </div>
+  </div>`;
 }
 
 function buildTicker() {
