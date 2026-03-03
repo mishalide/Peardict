@@ -82,6 +82,25 @@ If you keep the placeholder constants in local code, replace them before deployi
 ### 4) Deploy
 - Deploy your Cloudflare worker as usual after setting secrets and updating placeholders.
 
+### 5) Keep `matches` synced from The Blue Alliance (no Google Sheets)
+A second migration is included to sync TBA match data directly into Postgres:
+- `supabase/migrations/202603030002_tba_sync.sql`
+
+It adds:
+- `tba_sync_config` table (stores your event code)
+- `sync_tba_matches()` SQL function (calls TBA via `pg_net` and upserts into `matches`)
+- `schedule_tba_sync_every_5m()` SQL function (uses `pg_cron` every 5 minutes)
+
+Setup after running migration:
+- Store your TBA key in Supabase Vault:
+  - `select vault.create_secret('YOUR_TBA_AUTH_KEY', 'tba_auth_key');`
+- Set your event code:
+  - `update public.tba_sync_config set event_code = '2025txdri' where id = true;`
+- Schedule the sync:
+  - `select public.schedule_tba_sync_every_5m();`
+- Run once manually if needed:
+  - `select public.sync_tba_matches();`
+
 ## Notes
 - The quiz dashboard docs are in `cloudflare_page/README.md`.
 - Read `setup.md` for instructions on how to run this yourself.
