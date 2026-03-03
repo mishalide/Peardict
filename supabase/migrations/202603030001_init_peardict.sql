@@ -47,21 +47,25 @@ alter table public.bets enable row level security;
 alter table public.win_predictions enable row level security;
 
 -- Public read access for match and leaderboard surfaces
-create policy if not exists "public read matches"
+drop policy if exists "public read matches" on public.matches;
+create policy "public read matches"
   on public.matches for select
   using (true);
 
-create policy if not exists "public read users"
+drop policy if exists "public read users" on public.users;
+create policy "public read users"
   on public.users for select
   using (true);
 
-create policy if not exists "public read predictions"
+drop policy if exists "public read predictions" on public.win_predictions;
+create policy "public read predictions"
   on public.win_predictions for select
   using (true);
 
 -- Example policy for authenticated users reading their own bets.
 -- If user_id stores auth UID, this will work directly.
-create policy if not exists "users read own bets"
+drop policy if exists "users read own bets" on public.bets;
+create policy "users read own bets"
   on public.bets for select
   using (auth.uid()::text = user_id);
 
