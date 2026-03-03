@@ -53,6 +53,35 @@ This repository currently contains:
 
 ---
 
+
+## Supabase backend setup (new)
+
+This repo now includes a Supabase-first backend path for the Cloudflare Worker in `cloudflare_workers/fujo-worker.js`.
+
+### 1) Create your Supabase schema
+- Run the migration file in your Supabase SQL editor:
+  - `supabase/migrations/202603030001_init_peardict.sql`
+- This creates `users`, `matches`, `bets`, `win_predictions`, plus an atomic `place_bet(...)` SQL function used by the worker.
+
+### 2) Configure Worker secrets
+Set these in your Worker environment (Wrangler secret/env):
+- `SUPABASE_URL`
+- `SUPABASE_SERVICE_ROLE_KEY`
+
+If you keep the placeholder constants in local code, replace them before deploying.
+
+### 3) Seed data
+- Insert initial rows into `users` and `matches` in Supabase.
+- Existing frontend API contracts remain the same:
+  - `GET /api/users`
+  - `GET /api/matches`
+  - `GET /api/users/:user_id/bets`
+  - `POST /api/bets`
+  - `GET /api/leaderboard`
+
+### 4) Deploy
+- Deploy your Cloudflare worker as usual after setting secrets and updating placeholders.
+
 ## Notes
 - The quiz dashboard docs are in `cloudflare_page/README.md`.
 - Read `setup.md` for instructions on how to run this yourself.
