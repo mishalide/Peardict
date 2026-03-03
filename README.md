@@ -87,15 +87,13 @@ A second migration is included to sync TBA match data directly into Postgres:
 - `supabase/migrations/202603030002_tba_sync.sql`
 
 It adds:
-- `tba_sync_config` table (stores your event code)
+- `tba_sync_config` table (stores your event code + TBA auth key)
 - `sync_tba_matches()` SQL function (calls TBA via `pg_net` and upserts into `matches`)
 - `schedule_tba_sync_every_5m()` SQL function (uses `pg_cron` every 5 minutes)
 
 Setup after running migration:
-- Store your TBA key in Supabase Vault:
-  - `select vault.create_secret('YOUR_TBA_AUTH_KEY', 'tba_auth_key');`
-- Set your event code:
-  - `update public.tba_sync_config set event_code = '2025txdri' where id = true;`
+- Set your event code + TBA key in config table (run in SQL editor as admin):
+  - `update public.tba_sync_config set event_code = '2025txdri', tba_auth_key = 'YOUR_TBA_AUTH_KEY' where id = true;`
 - Schedule the sync:
   - `select public.schedule_tba_sync_every_5m();`
 - Run once manually if needed:

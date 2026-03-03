@@ -3,19 +3,29 @@
 
 create extension if not exists pg_net;
 create extension if not exists pg_cron;
-create extension if not exists vault;
 
 create table if not exists public.tba_sync_config (
   id boolean primary key default true,
   event_code text not null,
   enabled boolean not null default true,
+  tba_auth_key text,
   updated_at timestamptz not null default now(),
   constraint tba_sync_config_singleton check (id)
 );
 
-insert into public.tba_sync_config (id, event_code, enabled)
-values (true, '2025txdri', true)
+insert into public.tba_sync_config (id, event_code, enabled, tba_auth_key)
+values (true, '2025txdri', true, null)
 on conflict (id) do nothing;
+
+
+alter table public.tba_sync_config enable row level security;
+
+-- Do not expose TBA auth key to client roles. Service role can still access this table.
+drop policy if exists "deny client read tba config" on public.tba_sync_config;
+create policy "deny client read tba config"
+  on public.tba_sync_config
+  for select
+  using (false);
 
 create or replace function public._tba_label(comp_level text, set_number int, match_number int)
 returns text
@@ -47,7 +57,7 @@ set search_path = public
 as $$
 declare
   cfg record;
-  auth_key text;
+
   req_id bigint;
   tries int := 0;
   payload jsonb;
@@ -58,7 +68,7 @@ declare
   resolved_winner text;
   market_state text;
 begin
-  select event_code, enabled into cfg
+  select event_code, enabled, tba_auth_key into cfg
   from public.tba_sync_config
   where id = true;
 
@@ -70,20 +80,15 @@ begin
     return jsonb_build_object('ok', true, 'skipped', true, 'reason', 'sync disabled');
   end if;
 
-  select decrypted_secret into auth_key
-  from vault.decrypted_secrets
-  where name = 'tba_auth_key'
-  limit 1;
-
-  if auth_key is null then
-    return jsonb_build_object('ok', false, 'error', 'missing vault secret: tba_auth_key');
+  if cfg.tba_auth_key is null or btrim(cfg.tba_auth_key) = '' then
+    return jsonb_build_object('ok', false, 'error', 'missing tba_sync_config.tba_auth_key');
   end if;
 
   tba_url := format('https://www.thebluealliance.com/api/v3/event/%s/matches', cfg.event_code);
 
   select net.http_get(
     url := tba_url,
-    headers := jsonb_build_object('X-TBA-Auth-Key', auth_key)
+    headers := jsonb_build_object('X-TBA-Auth-Key', cfg.tba_auth_key)
   ) into req_id;
 
   loop
@@ -196,6 +201,8 @@ end;
 $schedule$;
 
 -- Optional one-time setup calls after migration:
--- select vault.create_secret('YOUR_TBA_AUTH_KEY', 'tba_auth_key');
--- update public.tba_sync_config set event_code = '2025txdri' where id = true;
+-- update public.tba_sync_config
+-- set event_code = '2025txdri',
+--     tba_auth_key = 'YOUR_TBA_AUTH_KEY'
+-- where id = true;
 -- select public.schedule_tba_sync_every_5m();
