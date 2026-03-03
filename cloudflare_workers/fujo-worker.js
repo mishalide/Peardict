@@ -120,12 +120,12 @@ async function loadUserBets(env, userId) {
 async function loadLeaderboard(env) {
   const [users, predictions] = await Promise.all([
     supabaseSelect(env, TABLES.users, "user_id,balance"),
-    supabaseSelect(env, TABLES.winPredictions, "user,points_received")
+    supabaseSelect(env, TABLES.winPredictions, "user_id,points_received")
   ]);
 
   const stats = {};
   for (const prediction of predictions) {
-    const uid = prediction.user;
+    const uid = prediction.user_id;
     if (!uid) continue;
 
     if (!stats[uid]) {

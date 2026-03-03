@@ -29,7 +29,7 @@ create table if not exists public.bets (
 
 create table if not exists public.win_predictions (
   id bigint generated always as identity primary key,
-  user text not null,
+  user_id text not null,
   match_id text,
   predicted_team text,
   match_winner text,
