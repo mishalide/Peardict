@@ -1,0 +1,863 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Peardict</title>
+  <link rel="icon" href="images/favicon.ico" />
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    *,
+    *::before,
+    *::after {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    :root {
+      --green: #5ABF34;
+      --green-dark: #4aa82b;
+      --green-light: #eaf7e4;
+      --text: #111;
+      --text-muted: #6b7280;
+      --border: #e5e7eb;
+      --bg: #fff;
+      --white: #fff;
+      --radius: 10px;
+    }
+
+    html {
+      scroll-behavior: smooth;
+    }
+
+    body {
+      font-family: 'Inter', sans-serif;
+      font-weight: 400;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+    }
+
+    /* ── NAV ── */
+    nav {
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      background: rgba(255, 255, 255, 0.92);
+      backdrop-filter: blur(10px);
+      border-bottom: 1px solid var(--border);
+      padding: 0 48px;
+      height: 60px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .nav-logo {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-weight: 600;
+      font-size: 17px;
+      color: var(--green);
+      text-decoration: none;
+    }
+
+    .nav-logo img {
+      height: 28px;
+      width: auto;
+    }
+
+    .nav-right {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+    }
+
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      font-family: 'Inter', sans-serif;
+      font-size: 14px;
+      font-weight: 500;
+      padding: 9px 20px;
+      border-radius: 8px;
+      cursor: pointer;
+      border: none;
+      text-decoration: none;
+      transition: all 0.15s;
+    }
+
+    .btn-ghost {
+      background: transparent;
+      color: var(--text-muted);
+    }
+
+    .btn-ghost:hover {
+      color: var(--text);
+    }
+
+    .btn-primary {
+      background: var(--green);
+      color: #fff;
+    }
+
+    .btn-primary:hover {
+      background: var(--green-dark);
+    }
+
+    .btn-outline {
+      background: transparent;
+      color: var(--text);
+      border: 1px solid var(--border);
+    }
+
+    .btn-outline:hover {
+      border-color: #ccc;
+      background: #f5f5f4;
+    }
+
+    .btn-full {
+      width: 100%;
+    }
+
+    .btn-lg {
+      padding: 13px 28px;
+      font-size: 16px;
+      border-radius: 10px;
+    }
+
+    /* ── HERO ── */
+    .hero {
+      max-width: 1100px;
+      margin: 0 auto;
+      padding: 80px 48px 60px;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 64px;
+      align-items: center;
+    }
+
+    .hero-eyebrow {
+      font-size: 12px;
+      font-weight: 500;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--green);
+      margin-bottom: 14px;
+    }
+
+    .hero h1 {
+      font-family: 'Inter', sans-serif;
+      font-size: 56px;
+      line-height: 1.08;
+      font-weight: 700;
+      letter-spacing: -1px;
+      margin-bottom: 20px;
+    }
+
+    .hero-sub {
+      font-size: 17px;
+      color: var(--text-muted);
+      line-height: 1.6;
+      margin-bottom: 36px;
+    }
+
+    .hero-ctas {
+      display: flex;
+      gap: 12px;
+    }
+
+    /* browser mockup */
+    .browser-mock {
+      border-radius: 12px;
+      overflow: hidden;
+      border: 1px solid var(--border);
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.09), 0 4px 12px rgba(0, 0, 0, 0.05);
+      background: var(--white);
+    }
+
+    .browser-bar {
+      background: #f0f0ee;
+      padding: 10px 14px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .browser-dots {
+      display: flex;
+      gap: 6px;
+    }
+
+    .dot {
+      width: 11px;
+      height: 11px;
+      border-radius: 50%;
+    }
+
+    .dot-r {
+      background: #ff5f57;
+    }
+
+    .dot-y {
+      background: #febc2e;
+    }
+
+    .dot-g {
+      background: #28c840;
+    }
+
+    .browser-url {
+      flex: 1;
+      margin-left: 10px;
+      background: var(--white);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: 4px 10px;
+      font-size: 11px;
+      color: var(--text-muted);
+      font-family: monospace;
+    }
+
+    .mock-hero-img {
+      width: 100%;
+      display: block;
+      aspect-ratio: 16/9;
+      object-fit: cover;
+      background: linear-gradient(135deg, #c8edc9 0%, #a8d5ab 40%, #7ec482 100%);
+    }
+
+    /* pear illustration inside mock */
+    .mock-content {
+      padding: 20px;
+    }
+
+    .mock-title {
+      font-family: 'Inter', sans-serif;
+      font-size: 20px;
+      font-weight: 700;
+      margin-bottom: 4px;
+    }
+
+    .mock-sub {
+      font-size: 12px;
+      color: var(--text-muted);
+      margin-bottom: 14px;
+    }
+
+    .mock-btns {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .mock-btn-p {
+      background: var(--green);
+      color: #fff;
+      text-align: center;
+      padding: 8px;
+      border-radius: 7px;
+      font-size: 13px;
+      font-weight: 500;
+    }
+
+    .mock-btn-s {
+      border: 1px solid var(--border);
+      color: var(--text);
+      text-align: center;
+      padding: 8px;
+      border-radius: 7px;
+      font-size: 13px;
+    }
+
+    /* ── FEATURES ── */
+    .features {
+      max-width: 1100px;
+      margin: 0 auto;
+      padding: 40px 48px 80px;
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 40px;
+    }
+
+    .feature {
+      border-top: 1px solid var(--border);
+      padding-top: 24px;
+    }
+
+    .feature h3 {
+      font-size: 16px;
+      font-weight: 600;
+      margin-bottom: 8px;
+      font-family: 'Inter', sans-serif;
+    }
+
+    .feature p {
+      font-size: 14px;
+      color: var(--text-muted);
+      line-height: 1.6;
+    }
+
+    /* ── FOOTER ── */
+    footer {
+      border-top: 1px solid var(--border);
+      max-width: 1100px;
+      margin: 0 auto;
+      padding: 48px 48px;
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 64px;
+    }
+
+    .footer-brand {
+      font-size: 15px;
+      font-weight: 600;
+      margin-bottom: 4px;
+    }
+
+    .footer-tagline {
+      font-size: 13px;
+      color: var(--text-muted);
+    }
+
+    .footer-links {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 0 48px;
+    }
+
+    .footer-col h4 {
+      font-size: 13px;
+      font-weight: 600;
+      margin-bottom: 12px;
+    }
+
+    .footer-col a {
+      display: block;
+      font-size: 13px;
+      color: var(--text-muted);
+      text-decoration: none;
+      margin-bottom: 8px;
+      transition: color 0.15s;
+    }
+
+    .footer-col a:hover {
+      color: var(--text);
+    }
+
+    /* ── MODAL ── */
+    .modal-overlay {
+      display: none;
+      position: fixed;
+      inset: 0;
+      z-index: 200;
+      background: rgba(0, 0, 0, 0.3);
+      backdrop-filter: blur(4px);
+      align-items: center;
+      justify-content: center;
+    }
+
+    .modal-overlay.open {
+      display: flex;
+    }
+
+    .modal {
+      background: var(--white);
+      border-radius: 16px;
+      padding: 36px;
+      width: 380px;
+      box-shadow: 0 24px 64px rgba(0, 0, 0, 0.15);
+      position: relative;
+      animation: modalIn 0.18s ease;
+    }
+
+    @keyframes modalIn {
+      from {
+        opacity: 0;
+        transform: translateY(12px) scale(0.98);
+      }
+
+      to {
+        opacity: 1;
+        transform: none;
+      }
+    }
+
+    .modal-close {
+      position: absolute;
+      top: 16px;
+      right: 16px;
+      background: none;
+      border: none;
+      cursor: pointer;
+      font-size: 20px;
+      color: var(--text-muted);
+      line-height: 1;
+    }
+
+    .modal-close:hover {
+      color: var(--text);
+    }
+
+    .modal-logo {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 24px;
+    }
+
+    .modal-logo svg {
+      width: 28px;
+      height: 28px;
+    }
+
+    .modal-logo span {
+      font-weight: 600;
+      font-size: 16px;
+    }
+
+    .modal h2 {
+      font-size: 22px;
+      font-weight: 600;
+      margin-bottom: 4px;
+    }
+
+    .modal-sub {
+      font-size: 14px;
+      color: var(--text-muted);
+      margin-bottom: 24px;
+    }
+
+    .field {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      margin-bottom: 14px;
+    }
+
+    .field label {
+      font-size: 13px;
+      font-weight: 500;
+    }
+
+    .field input {
+      font-family: 'Inter', sans-serif;
+      font-size: 14px;
+      padding: 10px 14px;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      background: var(--white);
+      color: var(--text);
+      transition: border-color 0.15s, box-shadow 0.15s;
+      outline: none;
+    }
+
+    .field input:focus {
+      border-color: var(--green);
+      box-shadow: 0 0 0 3px rgba(61, 184, 67, 0.12);
+    }
+
+    .modal-submit {
+      width: 100%;
+      margin-top: 6px;
+    }
+
+    .modal-switch {
+      text-align: center;
+      font-size: 13px;
+      color: var(--text-muted);
+      margin-top: 16px;
+    }
+
+    .modal-switch a {
+      color: var(--green);
+      cursor: pointer;
+      text-decoration: underline;
+    }
+
+    .modal-msg {
+      font-size: 13px;
+      margin-top: 10px;
+      padding: 8px 12px;
+      border-radius: 7px;
+      display: none;
+    }
+
+    .modal-msg.error {
+      background: #fef2f2;
+      color: #b91c1c;
+      display: block;
+    }
+
+    .modal-msg.success {
+      background: #f0fdf4;
+      color: #166534;
+      display: block;
+    }
+
+    /* tabs */
+    .modal-tabs {
+      display: flex;
+      gap: 0;
+      border-bottom: 1px solid var(--border);
+      margin-bottom: 24px;
+    }
+
+    .tab-btn {
+      flex: 1;
+      padding: 10px;
+      background: none;
+      border: none;
+      font-family: 'Inter', sans-serif;
+      font-size: 14px;
+      font-weight: 500;
+      color: var(--text-muted);
+      cursor: pointer;
+      border-bottom: 2px solid transparent;
+      margin-bottom: -1px;
+      transition: all 0.15s;
+    }
+
+    .tab-btn.active {
+      color: var(--text);
+      border-bottom-color: var(--green);
+    }
+
+    /* loading spinner */
+    .spinner {
+      display: none;
+      width: 16px;
+      height: 16px;
+      border: 2px solid rgba(255, 255, 255, 0.3);
+      border-top-color: #fff;
+      border-radius: 50%;
+      animation: spin 0.6s linear infinite;
+      margin: 0 auto;
+    }
+
+    @keyframes spin {
+      to {
+        transform: rotate(360deg);
+      }
+    }
+
+    .btn.loading .spinner {
+      display: inline-block;
+    }
+
+    .btn.loading .btn-label {
+      display: none;
+    }
+
+    /* nav user state */
+    .nav-user {
+      display: none;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .nav-user.visible {
+      display: flex;
+    }
+
+    .nav-user-email {
+      font-size: 13px;
+      color: var(--text-muted);
+    }
+
+    /* fade in on load */
+    .hero,
+    .features,
+    footer {
+      opacity: 0;
+      animation: fadeUp 0.5s ease forwards;
+    }
+
+    .features {
+      animation-delay: 0.08s;
+    }
+
+    footer {
+      animation-delay: 0.16s;
+    }
+
+    @keyframes fadeUp {
+      from {
+        opacity: 0;
+        transform: translateY(18px);
+      }
+
+      to {
+        opacity: 1;
+        transform: none;
+      }
+    }
+  </style>
+</head>
+
+<body>
+
+  <!-- ── NAV ── -->
+  <nav>
+    <a class="nav-logo" href="#">
+      <img src="images/logo.png" alt="Peardict" />
+      Peardict
+    </a>
+
+    <!-- logged-out nav -->
+    <div class="nav-right" id="navLoggedOut">
+      <button class="btn btn-ghost" onclick="openModal('signin')">Login</button>
+      <button class="btn btn-primary" onclick="openModal('signup')">Sign Up</button>
+    </div>
+
+    <!-- logged-in nav -->
+    <div class="nav-user" id="navLoggedIn">
+      <span class="nav-user-email" id="navEmail"></span>
+      <a class="btn btn-primary btn-lg" href="app.html">Open App →</a>
+      <button class="btn btn-ghost" onclick="signOut()">Sign Out</button>
+    </div>
+  </nav>
+
+  <!-- ── HERO ── -->
+  <section class="hero">
+    <div class="hero-left">
+      <p class="hero-eyebrow">FRC Scouting · Pearadox 5414</p>
+      <h1>Project Peardict</h1>
+      <p class="hero-sub">The Official Pearadox Scouting Game</p>
+      <div class="hero-ctas" id="heroCtas">
+        <button class="btn btn-primary btn-lg" onclick="openModal('signup')">Sign Up</button>
+        <button class="btn btn-outline btn-lg" onclick="openModal('signin')">Sign in</button>
+      </div>
+      <div id="heroCtas2" style="display:none">
+        <a class="btn btn-primary btn-lg" href="app.html">Open App →</a>
+      </div>
+    </div>
+
+    <div class="hero-right">
+      <div class="browser-mock">
+        <div class="browser-bar">
+          <div class="browser-dots">
+            <span class="dot dot-r"></span>
+            <span class="dot dot-y"></span>
+            <span class="dot dot-g"></span>
+          </div>
+        </div>
+        <!-- pear blossom photo -->
+        <img src="images/pear-blossom.png" alt=""
+          style="width:100%;display:block;aspect-ratio:16/9;object-fit:cover;" />
+      </div>
+    </div>
+  </section>
+
+  <!-- ── FEATURES ── -->
+  <div class="features">
+    <div class="feature">
+      <h3>Real time TBA Data</h3>
+      <p>Peardict is powered by The Blue Alliance, allowing for live match data.</p>
+    </div>
+    <div class="feature">
+      <h3>Prediction Based Point System</h3>
+      <p>Users pick which alliance/team will win, and points are awarded only for correct guesses.</p>
+    </div>
+    <div class="feature">
+      <h3>Leaderboard Features</h3>
+      <p>An interactive leaderboard that can display overall points, accuracy, and other metrics.</p>
+    </div>
+  </div>
+
+  <!-- ── FOOTER ── -->
+  <footer>
+    <div>
+      <p class="footer-brand">Peardict</p>
+      <p class="footer-tagline">Made by Pearadox's Scouting Team</p>
+    </div>
+    <div class="footer-links">
+      <div class="footer-col">
+        <h4>Technical</h4>
+        <a href="https://github.com/pearadox" target="_blank">Github</a>
+        <a href="#">Technical Overview</a>
+        <a href="https://www.thebluealliance.com" target="_blank">Powered by The Blue Alliance</a>
+      </div>
+      <div class="footer-col">
+        <h4>Support</h4>
+        <a href="#">Contact</a>
+      </div>
+    </div>
+  </footer>
+
+  <!-- ── AUTH MODAL ── -->
+  <div class="modal-overlay" id="modalOverlay" onclick="handleOverlayClick(event)">
+    <div class="modal">
+      <button class="modal-close" onclick="closeModal()">×</button>
+
+      <div class="modal-logo">
+        <img src="images/logo.png" alt="Peardict" style="height:28px;width:auto;" />
+        <span>Peardict</span>
+      </div>
+
+      <div class="modal-tabs">
+        <button class="tab-btn" id="tabSignup" onclick="switchTab('signup')">Sign Up</button>
+        <button class="tab-btn" id="tabSignin" onclick="switchTab('signin')">Sign In</button>
+      </div>
+
+      <!-- sign up -->
+      <div id="formSignup">
+        <h2>Create account</h2>
+        <p class="modal-sub">Join the Pearadox scouting game</p>
+        <div class="field">
+          <label>Email</label>
+          <input type="email" id="suEmail" placeholder="you@example.com" />
+        </div>
+        <div class="field">
+          <label>Password</label>
+          <input type="password" id="suPassword" placeholder="••••••••" />
+        </div>
+        <button class="btn btn-primary btn-lg modal-submit" id="btnSignup" onclick="doSignUp()">
+          <span class="btn-label">Sign Up</span>
+          <span class="spinner"></span>
+        </button>
+      </div>
+
+      <!-- sign in -->
+      <div id="formSignin" style="display:none">
+        <h2>Welcome back</h2>
+        <p class="modal-sub">Sign in to your Peardict account</p>
+        <div class="field">
+          <label>Email</label>
+          <input type="email" id="siEmail" placeholder="you@example.com" />
+        </div>
+        <div class="field">
+          <label>Password</label>
+          <input type="password" id="siPassword" placeholder="••••••••" />
+        </div>
+        <button class="btn btn-primary btn-lg modal-submit" id="btnSignin" onclick="doSignIn()">
+          <span class="btn-label">Sign In</span>
+          <span class="spinner"></span>
+        </button>
+      </div>
+
+      <div id="modalMsg" class="modal-msg"></div>
+    </div>
+  </div>
+
+  <script>
+    // ── SUPABASE ──────────────────────────────────────────────────
+    const SUPABASE_URL = "https://ycajdykfgseegrabdutp.supabase.co";
+    const SUPABASE_ANON = "sb_publishable_wmtVF-MgFeA7SR2ydTUIrQ_m4WeOy_G";
+    const sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON);
+
+    let currentUser = null;
+
+    // ── MODAL ─────────────────────────────────────────────────────
+    function openModal(tab = 'signup') {
+      document.getElementById('modalOverlay').classList.add('open');
+      switchTab(tab);
+      clearMsg();
+    }
+    function closeModal() {
+      document.getElementById('modalOverlay').classList.remove('open');
+      clearMsg();
+    }
+    function handleOverlayClick(e) {
+      if (e.target === document.getElementById('modalOverlay')) closeModal();
+    }
+    function switchTab(tab) {
+      document.getElementById('formSignup').style.display = tab === 'signup' ? '' : 'none';
+      document.getElementById('formSignin').style.display = tab === 'signin' ? '' : 'none';
+      document.getElementById('tabSignup').classList.toggle('active', tab === 'signup');
+      document.getElementById('tabSignin').classList.toggle('active', tab === 'signin');
+      clearMsg();
+    }
+    function showMsg(text, type) {
+      const el = document.getElementById('modalMsg');
+      el.textContent = text;
+      el.className = 'modal-msg ' + type;
+    }
+    function clearMsg() {
+      const el = document.getElementById('modalMsg');
+      el.className = 'modal-msg';
+      el.textContent = '';
+    }
+    function setLoading(btnId, on) {
+      document.getElementById(btnId).classList.toggle('loading', on);
+      document.getElementById(btnId).disabled = on;
+    }
+
+    // ── AUTH ──────────────────────────────────────────────────────
+    async function doSignUp() {
+      const email = document.getElementById('suEmail').value.trim();
+      const password = document.getElementById('suPassword').value;
+      if (!email || !password) { showMsg('Please fill in all fields.', 'error'); return; }
+
+      setLoading('btnSignup', true);
+      const { data, error } = await sb.auth.signUp({
+        email, password,
+        options: { data: { display_name: email.split('@')[0] } }
+      });
+      setLoading('btnSignup', false);
+
+      if (error) { showMsg(error.message, 'error'); return; }
+      showMsg('Check your email for a confirmation link!', 'success');
+    }
+
+    async function doSignIn() {
+      const email = document.getElementById('siEmail').value.trim();
+      const password = document.getElementById('siPassword').value;
+      if (!email || !password) { showMsg('Please fill in all fields.', 'error'); return; }
+
+      setLoading('btnSignin', true);
+      const { data, error } = await sb.auth.signInWithPassword({ email, password });
+      setLoading('btnSignin', false);
+
+      if (error) { showMsg(error.message, 'error'); return; }
+      onSignIn(data.user);
+      closeModal();
+    }
+
+    async function signOut() {
+      await sb.auth.signOut();
+      currentUser = null;
+      setLoggedOutState();
+    }
+
+    function onSignIn(user) {
+      currentUser = user;
+      document.getElementById('navEmail').textContent = user.email;
+      document.getElementById('navLoggedOut').style.display = 'none';
+      document.getElementById('navLoggedIn').classList.add('visible');
+      document.getElementById('heroCtas').style.display = 'none';
+      document.getElementById('heroCtas2').style.display = '';
+    }
+
+    function setLoggedOutState() {
+      document.getElementById('navLoggedOut').style.display = '';
+      document.getElementById('navLoggedIn').classList.remove('visible');
+      document.getElementById('heroCtas').style.display = '';
+      document.getElementById('heroCtas2').style.display = 'none';
+    }
+
+    // keyboard shortcut: Esc closes modal
+    document.addEventListener('keydown', e => {
+      if (e.key === 'Escape') closeModal();
+    });
+
+    // ── INIT ──────────────────────────────────────────────────────
+    sb.auth.getSession().then(({ data: { session } }) => {
+      if (session?.user) onSignIn(session.user);
+    });
+    sb.auth.onAuthStateChange((_event, session) => {
+      if (session?.user && !currentUser) onSignIn(session.user);
+      else if (!session?.user) setLoggedOutState();
+    });
+  </script>
+</body>
+
+</html>

@@ -1,0 +1,747 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Peardict - App</title>
+  <link rel="icon" href="images/favicon.ico" />
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    *,
+    *::before,
+    *::after {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    :root {
+      --green: #5ABF34;
+      --green-dark: #4aa82b;
+      --green-light: #eaf7e4;
+      --text: #111;
+      --text-muted: #6b7280;
+      --border: #e5e7eb;
+      --bg: #fafaf9;
+      --white: #fff;
+      --radius: 10px;
+    }
+
+    html {
+      scroll-behavior: smooth;
+    }
+
+    body {
+      font-family: 'Inter', sans-serif;
+      font-weight: 400;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+    }
+
+    /*  NAV  */
+    nav {
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      background: rgba(255, 255, 255, 0.92);
+      backdrop-filter: blur(10px);
+      border-bottom: 1px solid var(--border);
+      padding: 0 48px;
+      height: 60px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .nav-logo {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-weight: 600;
+      font-size: 17px;
+      color: var(--green);
+      text-decoration: none;
+    }
+
+    .nav-logo img {
+      height: 28px;
+      width: auto;
+    }
+
+    .nav-user {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .nav-user-email {
+      font-size: 13px;
+      font-weight: 500;
+      color: var(--text);
+      user-select: none;
+    }
+
+    .dropdown {
+      position: relative;
+    }
+
+    .dropdown-menu {
+      position: absolute;
+      right: 0;
+      top: 100%;
+      margin-top: 8px;
+      background: var(--white);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 6px;
+      box-shadow: 0 10px 24px rgba(0, 0, 0, 0.08);
+      display: none;
+      min-width: 160px;
+      z-index: 200;
+    }
+
+    .dropdown-menu.show {
+      display: block;
+      animation: dropIn 0.15s ease;
+    }
+
+    @keyframes dropIn {
+      from {
+        opacity: 0;
+        transform: translateY(-4px);
+      }
+
+      to {
+        opacity: 1;
+        transform: none;
+      }
+    }
+
+    .dropdown-item {
+      display: block;
+      width: 100%;
+      text-align: left;
+      padding: 8px 12px;
+      font-size: 13px;
+      color: var(--text);
+      cursor: pointer;
+      border-radius: 6px;
+      border: none;
+      background: none;
+      font-family: inherit;
+      font-weight: 500;
+    }
+
+    .dropdown-item:hover {
+      background: #f3f4f6;
+    }
+
+    .dropdown-item.danger {
+      color: #b91c1c;
+    }
+
+    .dropdown-item.danger:hover {
+      background: #fef2f2;
+    }
+
+    /*  APP LAYOUT  */
+    .container {
+      max-width: 1100px;
+      margin: 40px auto 80px;
+      padding: 0 48px;
+    }
+
+    .page-title {
+      font-size: 32px;
+      font-weight: 700;
+      margin-bottom: 24px;
+      letter-spacing: -0.5px;
+    }
+
+    .app-tabs {
+      display: flex;
+      gap: 24px;
+      border-bottom: 1px solid var(--border);
+      margin-bottom: 32px;
+    }
+
+    .app-tabs .tab-btn {
+      background: none;
+      border: none;
+      padding: 0 0 12px;
+      font-size: 15px;
+      font-weight: 500;
+      color: var(--text-muted);
+      cursor: pointer;
+      border-bottom: 2px solid transparent;
+      margin-bottom: -1px;
+      transition: 0.15s;
+      font-family: inherit;
+    }
+
+    .app-tabs .tab-btn.active {
+      color: var(--text);
+      border-bottom-color: var(--green);
+    }
+
+    .app-tabs .tab-btn:hover:not(.active) {
+      color: var(--text);
+    }
+
+    /*  MATCHES  */
+    .matches-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+      gap: 20px;
+    }
+
+    .match-card {
+      background: var(--white);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 20px;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.02);
+      transition: transform 0.15s, box-shadow 0.15s;
+    }
+
+    .match-card:hover {
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.06);
+      transform: translateY(-2px);
+    }
+
+    .match-card.locked {
+      opacity: 0.85;
+    }
+
+    .match-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 16px;
+      border-bottom: 1px solid var(--border);
+      padding-bottom: 12px;
+    }
+
+    .match-id {
+      font-weight: 600;
+      font-size: 15px;
+    }
+
+    .badge {
+      padding: 4px 8px;
+      border-radius: 6px;
+      font-size: 11px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+
+    .badge.open {
+      background: var(--green-light);
+      color: var(--green-dark);
+    }
+
+    .badge.completed {
+      background: #f3f4f6;
+      color: var(--text-muted);
+    }
+
+    .alliance-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 12px;
+      padding: 6px 8px;
+      border-radius: 6px;
+    }
+
+    .alliance-row.blue {
+      background: #f0f9ff;
+      color: #1d4ed8;
+      border: 1px solid #e0f2fe;
+    }
+
+    .alliance-row.red {
+      background: #fef2f2;
+      color: #b91c1c;
+      border: 1px solid #fee2e2;
+    }
+
+    .alliance-teams {
+      font-size: 14px;
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .alliance-score {
+      font-weight: 700;
+      font-size: 16px;
+    }
+
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      font-family: inherit;
+      font-size: 13px;
+      font-weight: 600;
+      padding: 8px 16px;
+      border-radius: 6px;
+      cursor: pointer;
+      border: none;
+      transition: 0.15s;
+    }
+
+    .btn-full {
+      width: 100%;
+    }
+
+    .btn-blue {
+      background: #eff6ff;
+      color: #1d4ed8;
+      border: 1px solid #bfdbfe;
+    }
+
+    .btn-blue:hover {
+      background: #dbeafe;
+      border-color: #93c5fd;
+    }
+
+    .btn-red {
+      background: #fef2f2;
+      color: #b91c1c;
+      border: 1px solid #fecaca;
+    }
+
+    .btn-red:hover {
+      background: #fee2e2;
+      border-color: #fca5a5;
+    }
+
+    .pick-status {
+      font-size: 13px;
+      font-weight: 600;
+      text-align: center;
+      margin-top: 16px;
+      padding: 8px;
+      border-radius: 6px;
+      background: #f3f4f6;
+      color: var(--text-muted);
+    }
+
+    .pick-status.correct {
+      background: var(--green-light);
+      color: var(--green-dark);
+    }
+
+    .pick-status.incorrect {
+      background: #fef2f2;
+      color: #b91c1c;
+    }
+
+    /*  LEADERBOARD  */
+    .table-container {
+      background: var(--white);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      overflow-x: auto;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.02);
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      text-align: left;
+    }
+
+    th {
+      background: #f9fafb;
+      padding: 14px 20px;
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      border-bottom: 1px solid var(--border);
+      cursor: pointer;
+      user-select: none;
+      white-space: nowrap;
+      transition: background 0.15s;
+    }
+
+    th:hover {
+      background: #f3f4f6;
+      color: var(--text);
+    }
+
+    td {
+      padding: 16px 20px;
+      font-size: 14px;
+      border-bottom: 1px solid var(--border);
+      color: var(--text);
+    }
+
+    tr:last-child td {
+      border-bottom: none;
+    }
+
+    tr.me td {
+      font-weight: 600;
+      background: #f0fdf4;
+      color: var(--green-dark);
+    }
+
+    /*  DEV LOG  */
+    #devLogContainer {
+      display: none;
+      position: fixed;
+      bottom: 24px;
+      right: 24px;
+      width: 420px;
+      background: #111;
+      color: #eee;
+      border-radius: 12px;
+      box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+      z-index: 999;
+      font-family: monospace;
+      border: 1px solid #333;
+      overflow: hidden;
+    }
+
+    .devlog-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 10px 16px;
+      background: #1a1a1a;
+      border-bottom: 1px solid #333;
+    }
+
+    .devlog-title {
+      margin: 0;
+      font-size: 12px;
+      color: var(--green);
+      text-transform: uppercase;
+      font-weight: 600;
+      letter-spacing: 0.05em;
+    }
+
+    .devlog-close {
+      background: none;
+      border: none;
+      color: #aaa;
+      cursor: pointer;
+      font-size: 18px;
+      line-height: 1;
+    }
+
+    .devlog-close:hover {
+      color: #fff;
+    }
+
+    #log {
+      max-height: 240px;
+      overflow-y: auto;
+      font-size: 12px;
+      color: #aaa;
+      padding: 12px 16px;
+    }
+  </style>
+</head>
+
+<body>
+
+  <nav>
+    <a class="nav-logo" href="index.html">
+      <img src="images/logo.png" alt="Peardict"
+        onerror="this.src='data:image/svg+xml;utf8,<svg xmlns=\'http://www.w3.org/2000/svg\' width=\'28\' height=\'28\'><rect width=\'28\' height=\'28\' fill=\'%235ABF34\' rx=\'4\'/></svg>'" />
+      Peardict
+    </a>
+
+    <div class="nav-user">
+      <div class="dropdown">
+        <span class="nav-user-email" onclick="toggleUserMenu()"
+          style="cursor:pointer; display:flex; align-items:center; gap:6px;">
+          <span id="userEmailText">Loading...</span> <span style="font-size:10px;">v</span>
+        </span>
+        <div class="dropdown-menu" id="userMenu">
+          <button class="dropdown-item" onclick="toggleLog()">Developer Log</button>
+          <button class="dropdown-item danger" onclick="signOut()">Sign Out</button>
+        </div>
+      </div>
+    </div>
+  </nav>
+
+  <div class="container">
+    <div class="app-tabs">
+      <button class="tab-btn active" onclick="switchAppTab('matches')" id="tabAppMatches">Matches</button>
+      <button class="tab-btn" onclick="switchAppTab('leaderboard')" id="tabAppLeaderboard">Leaderboard</button>
+    </div>
+
+    <div id="sectionMatches">
+      <h2 class="page-title">Upcoming Matches</h2>
+      <div class="matches-grid" id="matchesGrid">
+        <div style="color:var(--text-muted); font-size:14px;">Loading matches...</div>
+      </div>
+    </div>
+
+    <div id="sectionLeaderboard" style="display:none;">
+      <h2 class="page-title">Global Leaderboard</h2>
+      <div class="table-container">
+        <table>
+          <thead>
+            <tr>
+              <th>Rank</th>
+              <th onclick="doSort('display_name')">Scout </th>
+              <th onclick="doSort('points')">Points </th>
+              <th onclick="doSort('accuracy_pct')">Accuracy </th>
+              <th onclick="doSort('correct_picks')">Picks </th>
+            </tr>
+          </thead>
+          <tbody id="lbTbody">
+            <tr>
+              <td colspan="5" style="color:var(--text-muted); text-align:center;">Loading leaderboard...</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- DEV LOG OVERLAY -->
+  <div id="devLogContainer">
+    <div class="devlog-header">
+      <h3 class="devlog-title">Developer Log</h3>
+      <button class="devlog-close" onclick="toggleLog()">x</button>
+    </div>
+    <div id="log"></div>
+  </div>
+
+  <script>
+    //  CONFIG 
+    const SUPABASE_URL = "https://ycajdykfgseegrabdutp.supabase.co";
+    const SUPABASE_ANON = "sb_publishable_wmtVF-MgFeA7SR2ydTUIrQ_m4WeOy_G";
+    const sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON);
+
+    //  STATE 
+    let currentUser = null;
+    let myPicks = {};
+    let lbData = [];
+    let sortCol = 'points';
+    let sortDesc = true;
+
+    //  LOG & UI Toggles 
+    function log(msg, cls = "") {
+      const el = document.getElementById("log");
+      const line = document.createElement("div");
+      if (cls === "error") line.style.color = "#ff7a7a";
+      else if (cls === "success") line.style.color = "#7fff7f";
+      line.style.marginBottom = "4px";
+      line.textContent = `[${new Date().toLocaleTimeString()}] ${msg}`;
+      el.prepend(line);
+    }
+
+    function toggleLog() {
+      const el = document.getElementById("devLogContainer");
+      el.style.display = el.style.display === "none" || el.style.display === "" ? "block" : "none";
+      document.getElementById("userMenu").classList.remove("show"); // close user menu
+    }
+
+    function toggleUserMenu() {
+      document.getElementById("userMenu").classList.toggle("show");
+    }
+
+    window.onclick = function (event) {
+      if (!event.target.closest('.dropdown')) {
+        const dropdowns = document.getElementsByClassName("dropdown-menu");
+        for (let i = 0; i < dropdowns.length; i++) {
+          dropdowns[i].classList.remove('show');
+        }
+      }
+    }
+
+    function switchAppTab(tab) {
+      document.getElementById('sectionMatches').style.display = tab === 'matches' ? '' : 'none';
+      document.getElementById('sectionLeaderboard').style.display = tab === 'leaderboard' ? '' : 'none';
+      document.getElementById('tabAppMatches').classList.toggle('active', tab === 'matches');
+      document.getElementById('tabAppLeaderboard').classList.toggle('active', tab === 'leaderboard');
+    }
+
+    //  AUTH 
+    function handleNotSignedIn() {
+      if (window.location.protocol === 'file:') {
+        log("No session found. Browsers often block shared login state across file:// URLs. Please run a local web server (e.g. python -m http.server).", "error");
+        document.getElementById("matchesGrid").innerHTML = "<div style='color:#b91c1c; font-weight:500;'>Authentication failed. <br><br>You are viewing this over file:// which isolates login state between files. Please launch a local server and try again.</div>";
+      } else {
+        window.location.replace("index.html");
+      }
+    }
+
+    sb.auth.getSession().then(({ data: { session } }) => {
+      if (session?.user) {
+        onSignIn(session.user);
+      } else {
+        handleNotSignedIn();
+      }
+    });
+
+    sb.auth.onAuthStateChange((_event, session) => {
+      if (session?.user && !currentUser) {
+        onSignIn(session.user);
+      } else if (!session?.user && _event === 'SIGNED_OUT') {
+        window.location.replace("index.html");
+      }
+    });
+
+    function onSignIn(user) {
+      currentUser = user;
+      document.getElementById("userEmailText").textContent = user.email;
+      log(`signed in: ${user.email}`, "success");
+      loadMyPicks().then(loadMatches);
+      loadLeaderboard();
+    }
+
+    async function signOut() {
+      await sb.auth.signOut();
+    }
+
+    //  PICKS 
+    async function loadMyPicks() {
+      if (!currentUser) return;
+      const { data, error } = await sb.from("picks").select("*").eq("user_id", currentUser.id);
+      if (error) { log("picks load error: " + error.message, "error"); return; }
+      myPicks = {};
+      for (const p of data) myPicks[p.match_id] = p;
+      log(`loaded ${data.length} of my picks`);
+    }
+
+    async function submitPick(matchId, side) {
+      if (!currentUser) return;
+      log(`submitting pick: ${matchId} -> ${side}`);
+      const { data, error } = await sb.from("picks").insert({ user_id: currentUser.id, match_id: matchId, side }).select().single();
+      if (error) { log("pick error: " + error.message, "error"); return; }
+
+      myPicks[matchId] = data;
+      log(`pick locked: ${matchId} -> ${side}`, "success");
+      loadMatches();
+      loadLeaderboard();
+    }
+
+    //  MATCHES 
+    async function loadMatches() {
+      const { data, error } = await sb.from("matches").select("*").order("match_id");
+      if (error) { log("matches error: " + error.message, "error"); return; }
+
+      const container = document.getElementById("matchesGrid");
+      if (!data.length) { container.innerHTML = "<div style='color:var(--text-muted)'>No matches found.</div>"; return; }
+
+      container.innerHTML = data.map(m => {
+        const myPick = myPicks[m.match_id];
+        const isOpen = m.status === "open";
+        const isDone = m.status === "completed";
+
+        const badge = isDone
+          ? `<span class="badge completed">DONE: ${m.winner?.toUpperCase() ?? "?"} WINS</span>`
+          : `<span class="badge open">OPEN</span>`;
+
+        const blueTeams = (m.blue_teams || []).join(", ");
+        const redTeams = (m.red_teams || []).join(", ");
+
+        const blueScore = isDone ? m.blue_score : "-";
+        const redScore = isDone ? m.red_score : "-";
+
+        let actions = "";
+        if (myPick) {
+          let statusClass = myPick.correct === true ? 'correct' : myPick.correct === false ? 'incorrect' : '';
+          let statusText = myPick.correct === true ? 'Correct' : myPick.correct === false ? 'Incorrect' : 'Pending';
+          actions = `<div class="pick-status ${statusClass}">Picked ${myPick.side.toUpperCase()} - ${statusText}</div>`;
+        } else if (isOpen) {
+          actions = `
+          <div style="display:flex;gap:12px;margin-top:16px;">
+            <button class="btn btn-blue btn-full" onclick="submitPick('${m.match_id}', 'blue')">Pick Blue</button>
+            <button class="btn btn-red btn-full" onclick="submitPick('${m.match_id}', 'red')">Pick Red</button>
+          </div>
+        `;
+        } else {
+          actions = `<div class="pick-status">Picks closed</div>`;
+        }
+
+        return `
+        <div class="match-card ${myPick ? 'locked' : ''}">
+          <div class="match-header">
+            <span class="match-id">${m.match_id}</span>
+            ${badge}
+          </div>
+          <div class="alliance-row blue">
+            <div class="alliance-teams"><span>[Blue]</span> ${blueTeams}</div>
+            <div class="alliance-score">${blueScore}</div>
+          </div>
+          <div class="alliance-row red">
+             <div class="alliance-teams"><span>[Red]</span> ${redTeams}</div>
+             <div class="alliance-score">${redScore}</div>
+          </div>
+          ${actions}
+        </div>`;
+      }).join("");
+      log(`loaded ${data.length} matches`);
+    }
+
+    //  LEADERBOARD 
+    async function loadLeaderboard() {
+      const { data, error } = await sb.from("leaderboard").select("*");
+      if (error) { log("leaderboard error: " + error.message, "error"); return; }
+      lbData = data;
+      log(`leaderboard: ${data.length} scouts`);
+      renderLeaderboard();
+    }
+
+    function doSort(col) {
+      if (sortCol === col) {
+        sortDesc = !sortDesc;
+      } else {
+        sortCol = col;
+        sortDesc = true;
+      }
+      renderLeaderboard();
+    }
+
+    function renderLeaderboard() {
+      const d = [...lbData];
+      d.sort((a, b) => {
+        let valA = a[sortCol]; let valB = b[sortCol];
+        // Default to 0 if null
+        if (valA == null) valA = 0; if (valB == null) valB = 0;
+        if (typeof valA === 'string') valA = valA.toLowerCase();
+        if (typeof valB === 'string') valB = valB.toLowerCase();
+
+        if (valA < valB) return sortDesc ? 1 : -1;
+        if (valA > valB) return sortDesc ? -1 : 1;
+        return 0;
+      });
+
+      const container = document.getElementById("lbTbody");
+      if (!d.length) { container.innerHTML = "<tr><td colspan='5' style='text-align:center;color:var(--text-muted);'>No data yet</td></tr>"; return; }
+
+      container.innerHTML = d.map((row, i) => {
+        const isMe = currentUser && row.user_id === currentUser.id;
+        return `
+        <tr class="${isMe ? 'me' : ''}">
+          <td><span style="display:inline-block;width:24px;height:24px;line-height:24px;text-align:center;border-radius:50%;background:${isMe ? 'rgba(90,191,52,0.15)' : '#f3f4f6'};font-size:12px;font-weight:600;">${i + 1}</span></td>
+          <td>${row.display_name}${isMe ? ' (You)' : ''}</td>
+          <td style="font-weight:600;">${row.points}</td>
+          <td>${row.accuracy_pct}%</td>
+          <td>${row.correct_picks} / ${row.total_picks}</td>
+        </tr>`;
+      }).join("");
+    }
+  </script>
+</body>
+
+</html>
